@@ -1,13 +1,14 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { TamagotchiContext } from '../context/TamagotchiContext';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Pressable } from 'react-native';
+import { TamagotchiContext, MARKET_ITEMS } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
   const { 
     isim, tur, aclik, mutluluk, level, xp, 
-    envanter, kullanPremiumMama, kullanEnerjiIksiri, 
-    besle, oyna, isLoaded 
+    envanter, esyaKullan, oyna, isLoaded 
   } = useContext(TamagotchiContext);
+
+  const [besleModalVisible, setBesleModalVisible] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -27,36 +28,39 @@ const HomeScreen = () => {
   const isHungry = aclik > 70;
   const finalBgColor = isHungry ? '#ffcccc' : '#ffffff'; 
 
+  // Envanterdeki ürünleri ayır
+  const beslenmeEsyalari = Object.keys(envanter).filter(
+    (id) => envanter[id] > 0 && (MARKET_ITEMS[id].tip === 'yiyecek' || MARKET_ITEMS[id].tip === 'icecek')
+  );
+  const ozelEsyalar = Object.keys(envanter).filter(
+    (id) => envanter[id] > 0 && MARKET_ITEMS[id].tip === 'ozel'
+  );
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       
-      {/* GAMIFICATION: Envanter (Tepeye Taşındı & Yeni Tasarım) */}
+      {/* GAMIFICATION: Özel Ögeler Çantası */}
       <View style={styles.inventoryCard}>
-        <Text style={styles.inventoryTitle}>🎒 Çantam</Text>
+        <Text style={styles.inventoryTitle}>🎒 Özel Ögeler</Text>
         
-        <View style={styles.inventoryItemsRow}>
-          <TouchableOpacity 
-            style={[styles.invItem, envanter.mama === 0 && styles.invItemDisabled]}
-            disabled={envanter.mama === 0}
-            onPress={kullanPremiumMama}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.invEmojiText, envanter.mama === 0 && styles.invEmojiDisabled]}>
-              🍎 x{envanter.mama}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.invItem, envanter.iksir === 0 && styles.invItemDisabled]}
-            disabled={envanter.iksir === 0}
-            onPress={kullanEnerjiIksiri}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.invEmojiText, envanter.iksir === 0 && styles.invEmojiDisabled]}>
-              💊 x{envanter.iksir}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inventoryItemsRow}>
+          {ozelEsyalar.length > 0 ? (
+            ozelEsyalar.map((id) => (
+              <TouchableOpacity 
+                key={id}
+                style={styles.invItem}
+                onPress={() => esyaKullan(id)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.invEmojiText}>
+                  {MARKET_ITEMS[id].emoji} x{envanter[id]}
+                </Text>
+              </TouchableOpacity>
+            ))
+          ) : (
+             <Text style={styles.emptyStText}>Çantanda henüz özel eşya yok.</Text>
+          )}
+        </ScrollView>
       </View>
 
       <View style={[styles.card, { backgroundColor: finalBgColor }]}>
@@ -93,22 +97,73 @@ const HomeScreen = () => {
         <View style={styles.actionContainer}>
           <TouchableOpacity 
             style={[styles.button, styles.feedButton]} 
-            onPress={besle}
+            onPress={() => setBesleModalVisible(true)}
             activeOpacity={0.7}
           >
-            <Text style={styles.buttonText}>Besle</Text>
+            <Text style={styles.buttonText}>Besle 🍽️</Text>
           </TouchableOpacity>
           <TouchableOpacity 
             style={[styles.button, styles.playButton]} 
             onPress={oyna}
             activeOpacity={0.7}
           >
-            <Text style={styles.buttonText}>Oyna</Text>
+            <Text style={styles.buttonText}>Oyna 🎾</Text>
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* BESLENME MODALI */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={besleModalVisible}
+        onRequestClose={() => setBesleModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Ne Yedirmek İstersin? 😋</Text>
+              <Pressable onPress={() => setBesleModalVisible(false)} style={styles.closeButton}>
+                <Text style={styles.closeButtonText}>X</Text>
+              </Pressable>
+            </View>
 
-      <View style={{height: 20}} />
+            <ScrollView contentContainerStyle={styles.modalItemsContainer} showsVerticalScrollIndicator={false}>
+              {beslenmeEsyalari.length > 0 ? (
+                beslenmeEsyalari.map((id) => (
+                  <TouchableOpacity 
+                    key={id}
+                    style={styles.foodItem}
+                    onPress={() => {
+                        esyaKullan(id);
+                        if(envanter[id] === 1 && beslenmeEsyalari.length === 1) {
+                           setBesleModalVisible(false); // sonuncu bittiyse kapat
+                        }
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={styles.foodEmoji}>{MARKET_ITEMS[id].emoji}</Text>
+                    <View style={styles.foodInfo}>
+                      <Text style={styles.foodTitle}>{MARKET_ITEMS[id].isim} (x{envanter[id]})</Text>
+                      <Text style={styles.foodDesc}>{MARKET_ITEMS[id].aciklama}</Text>
+                    </View>
+                    <View style={styles.useButton}>
+                       <Text style={styles.useButtonText}>Kullan</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyFoodContainer}>
+                  <Text style={styles.emptyFoodEmoji}>🛒</Text>
+                  <Text style={styles.emptyFoodText}>Çantanda yiyecek veya içecek kalmamış!</Text>
+                  <Text style={styles.emptyFoodSubtext}>Markete gidip bir şeyler satın almalısın.</Text>
+                </View>
+              )}
+            </ScrollView>
+            
+          </View>
+        </View>
+      </Modal>
 
       <View style={{height: 20}} />
     </ScrollView>
@@ -129,6 +184,7 @@ const styles = StyleSheet.create({
   contentContainer: {
     alignItems: 'center',
     padding: 20,
+    paddingTop: 10,
   },
   card: {
     width: '100%',
@@ -222,10 +278,12 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1, 
+    flexDirection: 'row',
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
   },
   feedButton: {
     backgroundColor: '#ff9f43',
@@ -251,6 +309,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 5,
+    marginBottom: 20,
   },
   inventoryTitle: {
     fontSize: 18,
@@ -260,7 +319,13 @@ const styles = StyleSheet.create({
   },
   inventoryItemsRow: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 10,
+    paddingRight: 20, // scroll için boşluk
+  },
+  emptyStText: {
+    fontSize: 14,
+    color: '#b2bec3',
+    fontStyle: 'italic',
   },
   invItem: {
     backgroundColor: '#f8f9fa',
@@ -271,20 +336,114 @@ const styles = StyleSheet.create({
     borderColor: '#0984e3',
     alignItems: 'center',
     justifyContent: 'center',
-    flex: 1,
-  },
-  invItemDisabled: {
-    borderColor: '#dfe6e9',
-    backgroundColor: '#f1f2f6',
+    minWidth: 70,
   },
   invEmojiText: {
     fontSize: 20,
     fontWeight: '800',
     color: '#0984e3',
   },
-  invEmojiDisabled: {
-    color: '#b2bec3',
+  // MODAL STYLES
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'flex-end',
   },
+  modalView: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    padding: 24,
+    maxHeight: '70%',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.1,
+    elevation: 15,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#2d3436',
+  },
+  closeButton: {
+    backgroundColor: '#f1f2f6',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#636e72',
+  },
+  modalItemsContainer: {
+    paddingBottom: 20,
+    gap: 12,
+  },
+  foodItem: {
+    flexDirection: 'row',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 16,
+    padding: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#dfe6e9',
+  },
+  foodEmoji: {
+    fontSize: 34,
+    marginRight: 12,
+  },
+  foodInfo: {
+    flex: 1,
+    marginRight: 10,
+  },
+  foodTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#2d3436',
+    marginBottom: 4,
+  },
+  foodDesc: {
+    fontSize: 12,
+    color: '#636e72',
+  },
+  useButton: {
+    backgroundColor: '#ff9f43',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  useButtonText: {
+    color: '#fff',
+    fontWeight: '800',
+    fontSize: 14,
+  },
+  emptyFoodContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyFoodEmoji: {
+    fontSize: 50,
+    marginBottom: 10,
+  },
+  emptyFoodText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#2d3436',
+    marginBottom: 6,
+  },
+  emptyFoodSubtext: {
+    fontSize: 14,
+    color: '#636e72',
+  }
 });
 
 export default HomeScreen;

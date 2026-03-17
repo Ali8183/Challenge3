@@ -4,6 +4,18 @@ import { Alert } from 'react-native';
 
 export const TamagotchiContext = createContext();
 
+export const MARKET_ITEMS = {
+  // YİYECEK
+  elma: { id: 'elma', tip: 'yiyecek', isim: 'Elma', emoji: '🍎', fiyat: 10, aclikEtkisi: -15, mutlulukEtkisi: 2, xpEtkisi: 5, aciklama: 'Açlığı hafifçe azaltır.' },
+  hamburger: { id: 'hamburger', tip: 'yiyecek', isim: 'Hamburger', emoji: '🍔', fiyat: 30, aclikEtkisi: -40, mutlulukEtkisi: 10, xpEtkisi: 10, aciklama: 'Doyurucu, lezzetli bir öğün.' },
+  pizza: { id: 'pizza', tip: 'yiyecek', isim: 'Pizza', emoji: '🍕', fiyat: 50, aclikEtkisi: -60, mutlulukEtkisi: 15, xpEtkisi: 15, aciklama: 'Devasa bir ziyafet.' },
+  // İÇECEK
+  su: { id: 'su', tip: 'icecek', isim: 'Su', emoji: '💧', fiyat: 5, aclikEtkisi: -5, mutlulukEtkisi: 5, xpEtkisi: 2, aciklama: 'Hayvanı ferahlatır.' },
+  kahve: { id: 'kahve', tip: 'icecek', isim: 'Kahve', emoji: '☕', fiyat: 15, aclikEtkisi: -10, mutlulukEtkisi: 15, xpEtkisi: 5, aciklama: 'Enerji ve mutluluk verir.' },
+  // ÖZEL ÖGELER
+  mucizeIksiri: { id: 'mucizeIksiri', tip: 'ozel', isim: 'Mucize İksiri', emoji: '🧪', fiyat: 100, aclikEtkisi: -100, mutlulukEtkisi: 100, xpEtkisi: 50, aciklama: 'Tüm statları fuller ve çok tecrübe kazandırır.' },
+};
+
 export const TamagotchiProvider = ({ children }) => {
   const [isim, setIsim] = useState("Limo");
   const [tur, setTur] = useState("Uzaylı");
@@ -16,8 +28,9 @@ export const TamagotchiProvider = ({ children }) => {
   const [rozetler, setRozetler] = useState([]);
   const [altin, setAltin] = useState(0);
 
-  // ENVANTER STATE
-  const [envanter, setEnvanter] = useState({ mama: 0, iksir: 0 });
+  // ENVANTER STATE (Dinamik başlangıç)
+  const defaultEnvanter = Object.keys(MARKET_ITEMS).reduce((acc, key) => { acc[key] = 0; return acc; }, {});
+  const [envanter, setEnvanter] = useState(defaultEnvanter);
 
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -39,7 +52,11 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedXp) setXp(parseInt(storedXp));
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
-        if (storedEnvanter) setEnvanter(JSON.parse(storedEnvanter));
+        
+        if (storedEnvanter) {
+          const parsed = JSON.parse(storedEnvanter);
+          setEnvanter({ ...defaultEnvanter, ...parsed }); // Yeni eşya eklendiyse default ile merge ediyoruz
+        }
 
         setIsLoaded(true);
       } catch (e) {
@@ -85,7 +102,7 @@ export const TamagotchiProvider = ({ children }) => {
 
         return yeniAclik;
       });
-    }, 5000); // Test amaçlı her 5 saniyede bir
+    }, 5000); // Test amaçlı her 5 saniyede bir (ileride uzatılabilir)
 
     return () => clearInterval(interval);
   }, [isLoaded]);
@@ -123,11 +140,6 @@ export const TamagotchiProvider = ({ children }) => {
     }
   };
 
-  const besle = () => {
-    setAclik((prev) => Math.max(0, prev - 10));
-    processGamification(mutluluk);
-  };
-
   const oyna = () => {
     const yeniMutluluk = Math.min(100, mutluluk + 10);
     setMutluluk(yeniMutluluk);
@@ -136,50 +148,39 @@ export const TamagotchiProvider = ({ children }) => {
     processGamification(yeniMutluluk);
   };
 
-  const satinAlPremiumMama = () => {
-    if (altin >= 20) {
-      setAltin((prev) => prev - 20);
-      setEnvanter((prev) => ({ ...prev, mama: prev.mama + 1 }));
-      Alert.alert("Satın Alma Başarılı! 🍎", "Premium Mama çantana eklendi.");
+  const esyaSatinAl = (itemId) => {
+    const item = MARKET_ITEMS[itemId];
+    if (altin >= item.fiyat) {
+      setAltin((prev) => prev - item.fiyat);
+      setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
+      Alert.alert("Satın Alma Başarılı! 🛒", `${item.isim} çantana eklendi.`);
     } else {
-      Alert.alert("Yetersiz Altın ❌", "Premium Mama almak için 20 💰 gerekiyor.");
+      Alert.alert("Yetersiz Altın ❌", `${item.isim} almak için ${item.fiyat} 💰 gerekiyor.`);
     }
   };
 
-  const satinAlEnerjiIksiri = () => {
-    if (altin >= 50) {
-      setAltin((prev) => prev - 50);
-      setEnvanter((prev) => ({ ...prev, iksir: prev.iksir + 1 }));
-      Alert.alert("Satın Alma Başarılı! 💊", "Enerji İksiri çantana eklendi.");
-    } else {
-      Alert.alert("Yetersiz Altın ❌", "Enerji İksiri almak için 50 💰 gerekiyor.");
-    }
-  };
+  const esyaKullan = (itemId) => {
+    if (envanter[itemId] > 0) {
+      const item = MARKET_ITEMS[itemId];
+      setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
 
-  const kullanPremiumMama = () => {
-    if (envanter.mama > 0) {
-      setEnvanter((prev) => ({ ...prev, mama: prev.mama - 1 }));
-      setAclik(0);
+      setAclik((prev) => Math.max(0, Math.min(100, prev + item.aclikEtkisi)));
+      const yeniMutluluk = Math.min(100, Math.max(0, mutluluk + item.mutlulukEtkisi));
+      setMutluluk(yeniMutluluk);
       
-      const yeniXp = xp + 30;
+      let yeniXp = xp + item.xpEtkisi;
       let yeniLevel = level;
       if (yeniXp >= 100) {
         yeniLevel += Math.floor(yeniXp / 100);
         setLevel(yeniLevel);
       }
       setXp(yeniXp % 100);
-    }
-  };
 
-  const kullanEnerjiIksiri = () => {
-    if (envanter.iksir > 0) {
-      setEnvanter((prev) => ({ ...prev, iksir: prev.iksir - 1 }));
-      setMutluluk(100);
+      processGamification(yeniMutluluk);
     }
   };
 
   const tamamlaOdak = (sure) => {
-    // Sure: 1, 3, 5
     const xpOdulu = sure * 20; 
     const altinOdulu = sure * 10;
     
@@ -210,8 +211,7 @@ export const TamagotchiProvider = ({ children }) => {
   return (
     <TamagotchiContext.Provider value={{ 
       isim, tur, aclik, mutluluk, level, xp, rozetler, altin, envanter, 
-      besle, oyna, satinAlPremiumMama, satinAlEnerjiIksiri, kullanPremiumMama, kullanEnerjiIksiri, isLoaded,
-      tamamlaOdak, bozOdak
+      oyna, esyaSatinAl, esyaKullan, isLoaded, tamamlaOdak, bozOdak
     }}>
       {children}
     </TamagotchiContext.Provider>

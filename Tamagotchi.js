@@ -1,21 +1,71 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 
 const Tamagotchi = ({ isim, tur }) => {
   const [aclik, setAclik] = useState(50);
   const [mutluluk, setMutluluk] = useState(50);
 
+  // GAMIFICATION: Level ve XP state'leri
+  const [level, setLevel] = useState(1);
+  const [xp, setXp] = useState(0);
+
+  // GAMIFICATION: Kazanılan rozetleri (başarımları) tutan state
+  const [rozetler, setRozetler] = useState([]);
+
+  // Oyunlaştırma işlemlerini (XP kazanımı, Level Atlama ve Rozet kazanımı) yöneten ortak fonskiyon
+  const processGamification = (yeniMutluluk) => {
+    // 10-20 arası rastgele XP kazanımı
+    const kazanilanXp = Math.floor(Math.random() * 11) + 10;
+    let yeniXp = xp + kazanilanXp;
+    let yeniLevel = level;
+
+    // XP 100 veya üzeri olursa level atlat, kalanı aktar
+    if (yeniXp >= 100) {
+      yeniLevel += Math.floor(yeniXp / 100);
+      yeniXp = yeniXp % 100;
+    }
+
+    setLevel(yeniLevel);
+    setXp(yeniXp);
+
+    // Rozet Kontrolleri
+    const yeniRozetler = [...rozetler];
+    let rozetKazanildiMi = false;
+
+    // Yeni rozet ekleme koşulu fonksiyonu
+    const rozetEkle = (rozet) => {
+      if (!yeniRozetler.includes(rozet)) {
+        yeniRozetler.push(rozet);
+        rozetKazanildiMi = true;
+        // Küçük tebrik alerti
+        Alert.alert("Tebrikler! 🎉", `Kazandığın Rozet: ${rozet}`);
+      }
+    };
+
+    // İlk adımı (ilk tıklamayı) test et
+    if (rozetler.length === 0) rozetEkle("🥉 İlk Adım");
+    // Diğer koşullar
+    if (yeniMutluluk >= 100) rozetEkle("🌟 Mutlu Dost");
+    if (yeniLevel >= 3) rozetEkle("👑 Usta Bakıcı");
+
+    if (rozetKazanildiMi) {
+      setRozetler(yeniRozetler);
+    }
+  };
+
   // 1. Clean Code & Defensive Programming
   const besle = () => {
-    // Açlık 10 azalır ama asla 0'ın altına düşemez.
     setAclik((prev) => Math.max(0, prev - 10));
+    // Level ve XP'yi besleme sonrası güncelle
+    processGamification(mutluluk);
   };
 
   const oyna = () => {
-    // Mutluluk 10 artar ama asla 100'ü geçemez.
-    setMutluluk((prev) => Math.min(100, prev + 10));
-    // Açlık 5 artar ama o da asla 100'ü geçemez.
+    const yeniMutluluk = Math.min(100, mutluluk + 10);
+    setMutluluk(yeniMutluluk);
     setAclik((prev) => Math.min(100, prev + 5));
+    // Level ve XP'yi oynama sonrası güncelle
+    processGamification(yeniMutluluk);
   };
 
   // 2. Dinamik Görsel Geri Bildirimler
@@ -27,13 +77,22 @@ const Tamagotchi = ({ isim, tur }) => {
   };
 
   const isHungry = aclik > 70;
-  // Açlık 70'in üzerindeyse arka plan uyarısı (pastel kırmızı tonu), değilse temiz beyaz liste.
-  const cardBackgroundColor = isHungry ? '#ffeaa7' : '#ffffff'; // Hafif sarı/uyarı tonu da kullanılabilir ama kırmızı istenmişti.
+  // Açlık 70'in üzerindeyse arka plan uyarısı (pastel kırmızı tonu)
   const finalBgColor = isHungry ? '#ffcccc' : '#ffffff'; 
 
   return (
     <View style={styles.container}>
       <View style={[styles.card, { backgroundColor: finalBgColor }]}>
+        
+        {/* GAMIFICATION: Level ve XP (Progress Bar Şeklinde) */}
+        <View style={styles.levelContainer}>
+          <Text style={styles.levelText}>Seviye {level}</Text>
+          <View style={styles.progressBarBg}>
+            <View style={[styles.progressBarFill, { width: `${xp}%` }]} />
+          </View>
+          <Text style={styles.xpText}>{xp} / 100 XP</Text>
+        </View>
+
         <Text style={styles.emoji}>{getEmoji()}</Text>
         
         <View style={styles.infoContainer}>
@@ -55,6 +114,20 @@ const Tamagotchi = ({ isim, tur }) => {
             </Text>
           </View>
         </View>
+
+        {/* GAMIFICATION: Rozet Panosu */}
+        {rozetler.length > 0 && (
+          <View style={styles.badgesWrapper}>
+            <Text style={styles.badgesTitle}>Kazanılan Rozetler ({rozetler.length})</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {rozetler.map((rozet, index) => (
+                <View key={index} style={styles.badgeItem}>
+                  <Text style={styles.badgeText}>{rozet}</Text>
+                </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View style={styles.actionContainer}>
           <TouchableOpacity 
@@ -86,18 +159,45 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    width: '90%',
-    maxWidth: 350,
+    width: '100%',
+    maxWidth: 380,
     borderRadius: 24,
-    padding: 30,
+    padding: 24,
     alignItems: 'center',
-    // Yumuşak gölgelendirme - iOS (Shadows)
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.1,
     shadowRadius: 15,
-    // Yumuşak gölgelendirme - Android (Elevation)
     elevation: 10,
+  },
+  levelContainer: {
+    width: '100%',
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  levelText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0984e3',
+    marginBottom: 8,
+  },
+  progressBarBg: {
+    width: '100%',
+    height: 12,
+    backgroundColor: '#dfe6e9',
+    borderRadius: 6,
+    overflow: 'hidden',
+    marginBottom: 6,
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#74b9ff',
+    borderRadius: 6,
+  },
+  xpText: {
+    fontSize: 13,
+    color: '#636e72',
+    fontWeight: '700',
   },
   emoji: {
     fontSize: 80,
@@ -122,8 +222,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 30,
-    backgroundColor: 'rgba(255, 255, 255, 0.5)', // Kart içinde şeffaf alan
+    marginBottom: 20, // Alt kısma eklenecek rozetlere yer bırakmak için düşürüldü
+    backgroundColor: 'rgba(0, 0, 0, 0.04)', 
     paddingVertical: 12,
     borderRadius: 16,
   },
@@ -139,16 +239,40 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 20,
+    fontWeight: '900',
+  },
+  badgesWrapper: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  badgesTitle: {
+    fontSize: 15,
     fontWeight: '800',
+    color: '#2d3436',
+    marginBottom: 12,
+  },
+  badgeItem: {
+    backgroundColor: '#fffbeb',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    marginRight: 10,
+    borderWidth: 1.5,
+    borderColor: '#f1c40f',
+  },
+  badgeText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#d35400',
   },
   actionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    gap: 15, // Yeni React Native sürümlerinde desteklenir, boşluk bırakır
+    gap: 15, 
   },
   button: {
-    flex: 1, // Butonları eşit genişliğe zorlar
+    flex: 1, 
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: 'center',
@@ -163,7 +287,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
 });

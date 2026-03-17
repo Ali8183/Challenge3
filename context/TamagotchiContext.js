@@ -1,18 +1,15 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert } from 'react-native';
+import { Alert, Vibration } from 'react-native';
 
 export const TamagotchiContext = createContext();
 
 export const MARKET_ITEMS = {
-  // YİYECEK
   elma: { id: 'elma', tip: 'yiyecek', isim: 'Elma', emoji: '🍎', fiyat: 10, aclikEtkisi: -15, mutlulukEtkisi: 2, xpEtkisi: 5, aciklama: 'Açlığı hafifçe azaltır.' },
   hamburger: { id: 'hamburger', tip: 'yiyecek', isim: 'Hamburger', emoji: '🍔', fiyat: 30, aclikEtkisi: -40, mutlulukEtkisi: 10, xpEtkisi: 10, aciklama: 'Doyurucu, lezzetli bir öğün.' },
   pizza: { id: 'pizza', tip: 'yiyecek', isim: 'Pizza', emoji: '🍕', fiyat: 50, aclikEtkisi: -60, mutlulukEtkisi: 15, xpEtkisi: 15, aciklama: 'Devasa bir ziyafet.' },
-  // İÇECEK
   su: { id: 'su', tip: 'icecek', isim: 'Su', emoji: '💧', fiyat: 5, aclikEtkisi: -5, mutlulukEtkisi: 5, xpEtkisi: 2, aciklama: 'Hayvanı ferahlatır.' },
   kahve: { id: 'kahve', tip: 'icecek', isim: 'Kahve', emoji: '☕', fiyat: 15, aclikEtkisi: -10, mutlulukEtkisi: 15, xpEtkisi: 5, aciklama: 'Enerji ve mutluluk verir.' },
-  // ÖZEL ÖGELER
   mucizeIksiri: { id: 'mucizeIksiri', tip: 'ozel', isim: 'Mucize İksiri', emoji: '🧪', fiyat: 100, aclikEtkisi: -100, mutlulukEtkisi: 100, xpEtkisi: 50, aciklama: 'Tüm statları fuller ve çok tecrübe kazandırır.' },
 };
 
@@ -28,13 +25,12 @@ export const TamagotchiProvider = ({ children }) => {
   const [rozetler, setRozetler] = useState([]);
   const [altin, setAltin] = useState(0);
 
-  // ENVANTER STATE (Dinamik başlangıç)
   const defaultEnvanter = Object.keys(MARKET_ITEMS).reduce((acc, key) => { acc[key] = 0; return acc; }, {});
   const [envanter, setEnvanter] = useState(defaultEnvanter);
 
   const [isLoaded, setIsLoaded] = useState(false);
+  const [animTetikle, setAnimTetikle] = useState(0); // Animasyonları tetiklemek için Sayaç
 
-  // Verileri AsyncStorage'dan Yükle
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -56,7 +52,6 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedEnvanter) {
           const parsed = JSON.parse(storedEnvanter);
           const cleanEnvanter = { ...defaultEnvanter };
-          // Eski state (mama, iksir vb.) kalıntılarıyla çökmesini önlemek için MARKET_ITEMS içindeki anahtarları süz
           Object.keys(parsed).forEach(k => {
             if (MARKET_ITEMS[k]) {
               cleanEnvanter[k] = parsed[k];
@@ -74,7 +69,6 @@ export const TamagotchiProvider = ({ children }) => {
     loadData();
   }, []);
 
-  // State'ler her değiştiğinde AsyncStorage'a Kaydet
   useEffect(() => {
     const saveData = async () => {
       if (!isLoaded) return;
@@ -93,7 +87,6 @@ export const TamagotchiProvider = ({ children }) => {
     saveData();
   }, [aclik, mutluluk, level, xp, rozetler, altin, envanter, isLoaded]);
 
-  // GERÇEKÇİ YAŞAM DÖNGÜSÜ (Açlık Artar, Mutluluk Düşer)
   useEffect(() => {
     if (!isLoaded) return;
 
@@ -101,15 +94,19 @@ export const TamagotchiProvider = ({ children }) => {
       setAclik((prevAclik) => {
         const yeniAclik = Math.min(100, prevAclik + 1);
         
+        // Açlık tehlike sınırını yeni geçtiyse!
+        if (prevAclik <= 80 && yeniAclik > 80) {
+          Vibration.vibrate(500); // Uyarıcı Haptic Feedback
+        }
+        
         setMutluluk((prevMutluluk) => {
-          // Eğer açlık 80'in üzerindeyse, hayvan acı çeker ve mutluluk çok daha hızlı (x3) düşer.
           const azalmaMiktari = yeniAclik > 80 ? 3 : 1;
           return Math.max(0, prevMutluluk - azalmaMiktari);
         });
 
         return yeniAclik;
       });
-    }, 5000); // Test amaçlı her 5 saniyede bir (ileride uzatılabilir)
+    }, 5000); 
 
     return () => clearInterval(interval);
   }, [isLoaded]);
@@ -123,6 +120,7 @@ export const TamagotchiProvider = ({ children }) => {
       yeniLevel += Math.floor(yeniXp / 100);
       yeniXp = yeniXp % 100;
       setLevel(yeniLevel);
+      Vibration.vibrate([0, 100, 50, 100]); // Level Up Vibration Pattern
     }
     setXp(yeniXp);
 
@@ -134,6 +132,7 @@ export const TamagotchiProvider = ({ children }) => {
         yeniRozetler.push(rozet);
         rozetEklendiMi = true;
         Alert.alert("Tebrikler! 🎉", `Kazandığın Rozet: ${rozet}`);
+        Vibration.vibrate([0, 150, 150, 150]); // Rozet Titreşimi
       }
     };
 
@@ -152,6 +151,11 @@ export const TamagotchiProvider = ({ children }) => {
     setMutluluk(yeniMutluluk);
     setAclik((prev) => Math.min(100, prev + 5));
     setAltin((prev) => prev + 5); 
+    
+    // Oyun Hissiyati - Haptic & Pop Animasyonu
+    Vibration.vibrate(30);
+    setAnimTetikle((prev) => prev + 1);
+    
     processGamification(yeniMutluluk);
   };
 
@@ -160,8 +164,10 @@ export const TamagotchiProvider = ({ children }) => {
     if (altin >= item.fiyat) {
       setAltin((prev) => prev - item.fiyat);
       setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
+      Vibration.vibrate([0, 50, 50, 50]); // Market Satın Alma Titreşimi
       Alert.alert("Satın Alma Başarılı! 🛒", `${item.isim} çantana eklendi.`);
     } else {
+      Vibration.vibrate(400); // Başarısız/Yetersiz Hata Titreşimi
       Alert.alert("Yetersiz Altın ❌", `${item.isim} almak için ${item.fiyat} 💰 gerekiyor.`);
     }
   };
@@ -180,8 +186,13 @@ export const TamagotchiProvider = ({ children }) => {
       if (yeniXp >= 100) {
         yeniLevel += Math.floor(yeniXp / 100);
         setLevel(yeniLevel);
+        Vibration.vibrate([0, 100, 50, 100]); // Level Up Vibration
       }
       setXp(yeniXp % 100);
+
+      // Tatmin Edici Yemek Yeme Haptic Geri Bildirimi & Pop Animasyonu
+      Vibration.vibrate(50);
+      setAnimTetikle((prev) => prev + 1);
 
       processGamification(yeniMutluluk);
     }
@@ -201,6 +212,7 @@ export const TamagotchiProvider = ({ children }) => {
     }
     setXp(yeniXp % 100);
 
+    Vibration.vibrate([0, 100, 100, 100, 100, 100]); // Uzun başarı hissiyatı
     Alert.alert(
       "Odaklanma Başarılı! 🎯", 
       `Harika çalıştın! ${sure} dakikalık odaklanma sonucunda +${xpOdulu} XP ve +${altinOdulu} 💰 kazandın.`
@@ -209,6 +221,7 @@ export const TamagotchiProvider = ({ children }) => {
 
   const bozOdak = () => {
     setMutluluk((prev) => Math.max(0, prev - 20));
+    Vibration.vibrate(500); // Cezalandırıcı Uzun Titreşim
     Alert.alert(
       "Odak Bozuldu 🥺", 
       "Süreyi tamamlamadan pes ettin. Evcil hayvanın biraz üzüldü (-20 Mutluluk)."
@@ -218,7 +231,7 @@ export const TamagotchiProvider = ({ children }) => {
   return (
     <TamagotchiContext.Provider value={{ 
       isim, tur, aclik, mutluluk, level, xp, rozetler, altin, envanter, 
-      oyna, esyaSatinAl, esyaKullan, isLoaded, tamamlaOdak, bozOdak
+      oyna, esyaSatinAl, esyaKullan, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}
     </TamagotchiContext.Provider>

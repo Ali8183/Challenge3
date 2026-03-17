@@ -1,12 +1,59 @@
-import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import React, { useContext, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Pressable, Animated, Easing } from 'react-native';
 import { TamagotchiContext, MARKET_ITEMS } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
   const { 
     isim, tur, aclik, mutluluk, level, xp, 
-    envanter, esyaKullan, oyna, isLoaded 
+    envanter, esyaKullan, oyna, isLoaded, animTetikle
   } = useContext(TamagotchiContext);
+
+  const [besleModalVisible, setBesleModalVisible] = useState(false);
+
+  // --- ANIMATED API DEĞERLERİ ---
+  const floatAnim = React.useRef(new Animated.Value(0)).current;
+  const scaleAnim = React.useRef(new Animated.Value(1)).current;
+
+  // 1) Sürekli Yüzen (Floating/Breathing) Animasyon Döngüsü
+  React.useEffect(() => {
+    if (!isLoaded) return;
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: -15, // Hafifçe yukarı kayar
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0, // Geri eski yerine iner
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [isLoaded, floatAnim]);
+
+  // 2) Etkileşimde Büyüme (Pop/Scale) Animasyonu
+  React.useEffect(() => {
+    if (animTetikle > 0) {
+      Animated.sequence([
+        Animated.spring(scaleAnim, {
+          toValue: 1.3, // Karakter %30 büyür
+          speed: 20,
+          bounciness: 12, // Jölemsi hissiyat
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1, // Eski haline döner
+          speed: 10,
+          bounciness: 8,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [animTetikle, scaleAnim]);
 
   if (!isLoaded) {
     return (
@@ -43,7 +90,15 @@ const HomeScreen = () => {
             <Text style={styles.xpText}>{xp} / 100 XP</Text>
           </View>
 
-          <Text style={styles.emoji}>{getEmoji()}</Text>
+          {/* TAMAGOTCHI: Animated.Text kullanımı ile animasyonlar karaktere bağlandı */}
+        <Animated.Text 
+          style={[
+            styles.emoji, 
+            { transform: [{ translateY: floatAnim }, { scale: scaleAnim }] }
+          ]}
+        >
+          {getEmoji()}
+        </Animated.Text>
           
           <View style={styles.infoContainer}>
               <Text style={styles.name}>{isim}</Text>

@@ -16,6 +16,9 @@ export const TamagotchiProvider = ({ children }) => {
   const [rozetler, setRozetler] = useState([]);
   const [altin, setAltin] = useState(0);
 
+  // ENVANTER STATE
+  const [envanter, setEnvanter] = useState({ mama: 0, iksir: 0 });
+
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Verileri AsyncStorage'dan Yükle
@@ -28,6 +31,7 @@ export const TamagotchiProvider = ({ children }) => {
         const storedXp = await AsyncStorage.getItem('@xp');
         const storedRozetler = await AsyncStorage.getItem('@rozetler');
         const storedAltin = await AsyncStorage.getItem('@altin');
+        const storedEnvanter = await AsyncStorage.getItem('@envanter');
 
         if (storedAclik) setAclik(parseInt(storedAclik));
         if (storedMutluluk) setMutluluk(parseInt(storedMutluluk));
@@ -35,6 +39,7 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedXp) setXp(parseInt(storedXp));
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
+        if (storedEnvanter) setEnvanter(JSON.parse(storedEnvanter));
 
         setIsLoaded(true);
       } catch (e) {
@@ -48,7 +53,7 @@ export const TamagotchiProvider = ({ children }) => {
   // State'ler her değiştiğinde AsyncStorage'a Kaydet
   useEffect(() => {
     const saveData = async () => {
-      if (!isLoaded) return; // Henüz yüklenmediyse kaydetmeyi atla (sıfırlanmasın)
+      if (!isLoaded) return;
       try {
         await AsyncStorage.setItem('@aclik', aclik.toString());
         await AsyncStorage.setItem('@mutluluk', mutluluk.toString());
@@ -56,12 +61,13 @@ export const TamagotchiProvider = ({ children }) => {
         await AsyncStorage.setItem('@xp', xp.toString());
         await AsyncStorage.setItem('@rozetler', JSON.stringify(rozetler));
         await AsyncStorage.setItem('@altin', altin.toString());
+        await AsyncStorage.setItem('@envanter', JSON.stringify(envanter));
       } catch (e) {
         console.error("Veri kaydedilirken hata:", e);
       }
     };
     saveData();
-  }, [aclik, mutluluk, level, xp, rozetler, altin, isLoaded]);
+  }, [aclik, mutluluk, level, xp, rozetler, altin, envanter, isLoaded]);
 
   const processGamification = (yeniMutluluk) => {
     const kazanilanXp = Math.floor(Math.random() * 11) + 10;
@@ -105,13 +111,33 @@ export const TamagotchiProvider = ({ children }) => {
     const yeniMutluluk = Math.min(100, mutluluk + 10);
     setMutluluk(yeniMutluluk);
     setAclik((prev) => Math.min(100, prev + 5));
-    setAltin((prev) => prev + 5); // Oynama başına +5 altın
+    setAltin((prev) => prev + 5); 
     processGamification(yeniMutluluk);
   };
 
   const satinAlPremiumMama = () => {
     if (altin >= 20) {
       setAltin((prev) => prev - 20);
+      setEnvanter((prev) => ({ ...prev, mama: prev.mama + 1 }));
+      Alert.alert("Satın Alma Başarılı! 🍎", "Premium Mama çantana eklendi.");
+    } else {
+      Alert.alert("Yetersiz Altın ❌", "Premium Mama almak için 20 💰 gerekiyor.");
+    }
+  };
+
+  const satinAlEnerjiIksiri = () => {
+    if (altin >= 50) {
+      setAltin((prev) => prev - 50);
+      setEnvanter((prev) => ({ ...prev, iksir: prev.iksir + 1 }));
+      Alert.alert("Satın Alma Başarılı! 💊", "Enerji İksiri çantana eklendi.");
+    } else {
+      Alert.alert("Yetersiz Altın ❌", "Enerji İksiri almak için 50 💰 gerekiyor.");
+    }
+  };
+
+  const kullanPremiumMama = () => {
+    if (envanter.mama > 0) {
+      setEnvanter((prev) => ({ ...prev, mama: prev.mama - 1 }));
       setAclik(0);
       
       const yeniXp = xp + 30;
@@ -121,28 +147,24 @@ export const TamagotchiProvider = ({ children }) => {
         setLevel(yeniLevel);
       }
       setXp(yeniXp % 100);
-      Alert.alert("Satın Alma Başarılı! 🍎", "Premium Mama kullanıldı. Açlık sıfırlandı ve +30 XP kazandın!");
-    } else {
-      Alert.alert("Yetersiz Altın ❌", "Premium Mama almak için 20 Altına ihtiyacın var.");
     }
   };
 
-  const satinAlEnerjiIksiri = () => {
-    if (altin >= 50) {
-      setAltin((prev) => prev - 50);
+  const kullanEnerjiIksiri = () => {
+    if (envanter.iksir > 0) {
+      setEnvanter((prev) => ({ ...prev, iksir: prev.iksir - 1 }));
       setMutluluk(100);
-      Alert.alert("Satın Alma Başarılı! 💊", "Enerji İksiri kullanıldı. Mutluluk %100 oldu!");
-    } else {
-      Alert.alert("Yetersiz Altın ❌", "Enerji İksiri almak için 50 Altına ihtiyacın var.");
     }
   };
 
   const tamamlaOdak = (sure) => {
-    // Odak tamamlandığında muazzam ödül: +100 XP ve +50 Altın
-    setAltin((prev) => prev + 50);
+    // Sure: 1, 3, 5
+    const xpOdulu = sure * 20; 
+    const altinOdulu = sure * 10;
     
-    // XP ekleme (Seviye atlatma hesabı ile)
-    const yeniXp = xp + 100;
+    setAltin((prev) => prev + altinOdulu);
+    
+    const yeniXp = xp + xpOdulu;
     let yeniLevel = level;
     if (yeniXp >= 100) {
       yeniLevel += Math.floor(yeniXp / 100);
@@ -152,14 +174,12 @@ export const TamagotchiProvider = ({ children }) => {
 
     Alert.alert(
       "Odaklanma Başarılı! 🎯", 
-      `Harika çalıştın! ${sure} dakikalık odaklanma sonucunda +100 XP ve +50 Altın kazandın.`
+      `Harika çalıştın! ${sure} dakikalık odaklanma sonucunda +${xpOdulu} XP ve +${altinOdulu} 💰 kazandın.`
     );
   };
 
   const bozOdak = () => {
-    // Odak bozulduğunda ceza: Mutluluk -20
     setMutluluk((prev) => Math.max(0, prev - 20));
-    
     Alert.alert(
       "Odak Bozuldu 🥺", 
       "Süreyi tamamlamadan pes ettin. Evcil hayvanın biraz üzüldü (-20 Mutluluk)."
@@ -168,8 +188,8 @@ export const TamagotchiProvider = ({ children }) => {
 
   return (
     <TamagotchiContext.Provider value={{ 
-      isim, tur, aclik, mutluluk, level, xp, rozetler, altin, 
-      besle, oyna, satinAlPremiumMama, satinAlEnerjiIksiri, isLoaded,
+      isim, tur, aclik, mutluluk, level, xp, rozetler, altin, envanter, 
+      besle, oyna, satinAlPremiumMama, satinAlEnerjiIksiri, kullanPremiumMama, kullanEnerjiIksiri, isLoaded,
       tamamlaOdak, bozOdak
     }}>
       {children}

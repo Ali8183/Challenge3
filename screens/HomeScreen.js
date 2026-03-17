@@ -1,19 +1,22 @@
 import React, { useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { TamagotchiContext } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
-  const { isim, tur, aclik, mutluluk, level, xp, altin, besle, oyna, isLoaded } = useContext(TamagotchiContext);
+  const { 
+    isim, tur, aclik, mutluluk, level, xp, 
+    envanter, kullanPremiumMama, kullanEnerjiIksiri, 
+    besle, oyna, isLoaded 
+  } = useContext(TamagotchiContext);
 
   if (!isLoaded) {
     return (
-      <View style={styles.container}>
+      <View style={styles.loadingContainer}>
         <Text style={{ fontSize: 18, color: '#2d3436' }}>Yükleniyor...</Text>
       </View>
     );
   }
 
-  // Dinamik Görsel Geri Bildirimler
   const getEmoji = () => {
     if (mutluluk > 80) return "🤩";
     if (mutluluk >= 50) return "😊";
@@ -22,21 +25,14 @@ const HomeScreen = () => {
   };
 
   const isHungry = aclik > 70;
-  // Açlık 70'in üzerindeyse arka plan uyarısı (pastel kırmızı tonu)
   const finalBgColor = isHungry ? '#ffcccc' : '#ffffff'; 
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+      
       <View style={[styles.card, { backgroundColor: finalBgColor }]}>
-        
-        {/* GAMIFICATION: Level ve XP (Progress Bar Şeklinde) */}
         <View style={styles.levelContainer}>
-          <View style={styles.levelHeader}>
-            <Text style={styles.levelText}>Seviye {level}</Text>
-            <View style={styles.coinBadge}>
-              <Text style={styles.coinText}>🪙 {altin}</Text>
-            </View>
-          </View>
+          <Text style={styles.levelText}>Seviye {level}</Text>
           <View style={styles.progressBarBg}>
             <View style={[styles.progressBarFill, { width: `${xp}%` }]} />
           </View>
@@ -82,18 +78,55 @@ const HomeScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+
+      {/* GAMIFICATION: Envanter */}
+      <View style={styles.inventoryCard}>
+        <Text style={styles.inventoryTitle}>🎒 Çantam</Text>
+        
+        <View style={styles.inventoryItems}>
+          <View style={styles.inventoryItem}>
+            <Text style={styles.invEmoji}>🍎 x{envanter.mama}</Text>
+            <TouchableOpacity 
+              style={[styles.invButton, envanter.mama === 0 && styles.invButtonDisabled]}
+              disabled={envanter.mama === 0}
+              onPress={kullanPremiumMama}
+            >
+              <Text style={styles.invButtonText}>Kullan</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.inventoryItem}>
+            <Text style={styles.invEmoji}>💊 x{envanter.iksir}</Text>
+            <TouchableOpacity 
+              style={[styles.invButton, envanter.iksir === 0 && styles.invButtonDisabled]}
+              disabled={envanter.iksir === 0}
+              onPress={kullanEnerjiIksiri}
+            >
+              <Text style={styles.invButtonText}>Kullan</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      <View style={{height: 20}} />
+    </ScrollView>
   );
 };
 
-// 3. Modern Arayüz ve Flexbox Mimarisi
 const styles = StyleSheet.create({
-  container: {
-    flex: 1, // container'ı tam ekrana yaymak için eklendi (Sayfa bazlı)
+  loadingContainer: {
+    flex: 1, 
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#f1f2f6',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#f1f2f6',
+  },
+  contentContainer: {
+    alignItems: 'center',
     padding: 20,
-    backgroundColor: '#f1f2f6', // Ekran arka planı eklendi
   },
   card: {
     width: '100%',
@@ -106,36 +139,18 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 15,
     elevation: 10,
+    marginBottom: 20,
   },
   levelContainer: {
     width: '100%',
     marginBottom: 20,
     alignItems: 'center',
   },
-  levelHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  coinBadge: {
-    backgroundColor: '#fffbeb',
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#f1c40f',
-  },
-  coinText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#f39c12',
-  },
   levelText: {
     fontSize: 18,
     fontWeight: '800',
     color: '#0984e3',
+    marginBottom: 8,
   },
   progressBarBg: {
     width: '100%',
@@ -221,6 +236,58 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  // INVENTORY STYLES
+  inventoryCard: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  inventoryTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#2d3436',
+    marginBottom: 16,
+  },
+  inventoryItems: {
+    flexDirection: 'column',
+    gap: 12,
+  },
+  inventoryItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#f1f2f6',
+  },
+  invEmoji: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2d3436',
+  },
+  invButton: {
+    backgroundColor: '#0984e3',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  invButtonDisabled: {
+    backgroundColor: '#b2bec3',
+  },
+  invButtonText: {
+    color: '#ffffff',
+    fontWeight: '700',
+    fontSize: 14,
   },
 });
 

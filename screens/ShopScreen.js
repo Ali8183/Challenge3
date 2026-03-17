@@ -1,21 +1,14 @@
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { TamagotchiContext } from '../context/TamagotchiContext';
 
 const ShopScreen = () => {
-  const { altin, satinAlPremiumMama, satinAlEnerjiIksiri } = useContext(TamagotchiContext);
+  const { satinAlPremiumMama, satinAlEnerjiIksiri } = useContext(TamagotchiContext);
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Market</Text>
-        <View style={styles.coinBadge}>
-          <Text style={styles.coinText}>🪙 {altin}</Text>
-        </View>
-      </View>
-
       <Text style={styles.description}>
-        Altınlarınla evcil hayvanın için özel öğeler satın alabilirsin. Oynadıkça +5 altın kazanırsın!
+        Evcil hayvanınla ilgilenip 💰 kazan ! Bu bölümden eşyalar satın alıp 'Ev' ekranındaki çantana (envanterine) ekleyebilirsin.
       </Text>
 
       {/* Item 1 */}
@@ -23,14 +16,14 @@ const ShopScreen = () => {
         <Text style={styles.itemEmoji}>🍎</Text>
         <View style={styles.itemInfo}>
           <Text style={styles.itemTitle}>Premium Mama</Text>
-          <Text style={styles.itemDesc}>Açlığı tamamen sıfırlar ve anında +30 XP kazandırır.</Text>
+          <Text style={styles.itemDesc}>Çantana 1 adet ekler. Kullanıldığında açlığı sıfırlar ve +30 XP kazandırır.</Text>
         </View>
         <TouchableOpacity 
           style={styles.buyButton} 
           onPress={satinAlPremiumMama}
           activeOpacity={0.7}
         >
-          <Text style={styles.buyButtonText}>20 🪙</Text>
+          <Text style={styles.buyButtonText}>20 💰</Text>
         </TouchableOpacity>
       </View>
 
@@ -39,14 +32,14 @@ const ShopScreen = () => {
         <Text style={styles.itemEmoji}>💊</Text>
         <View style={styles.itemInfo}>
           <Text style={styles.itemTitle}>Enerji İksiri</Text>
-          <Text style={styles.itemDesc}>Evcil hayvanını anında çok mutlu yapar (%100 Mutluluk).</Text>
+          <Text style={styles.itemDesc}>Çantana 1 adet ekler. Kullanıldığında hayvanını %100 mutlu yapar.</Text>
         </View>
         <TouchableOpacity 
           style={styles.buyButton} 
           onPress={satinAlEnerjiIksiri}
           activeOpacity={0.7}
         >
-          <Text style={styles.buyButtonText}>50 🪙</Text>
+          <Text style={styles.buyButtonText}>50 💰</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -59,33 +52,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#f1f2f6',
     padding: 20,
     paddingTop: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#2d3436',
-  },
-  coinBadge: {
-    backgroundColor: '#f1c40f',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    shadowColor: '#f39c12',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 4,
-  },
-  coinText: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#ffffff',
   },
   description: {
     fontSize: 15,

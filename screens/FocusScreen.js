@@ -5,14 +5,13 @@ import { TamagotchiContext } from '../context/TamagotchiContext';
 const FocusScreen = () => {
   const { tamamlaOdak, bozOdak } = useContext(TamagotchiContext);
 
-  // Süreler: 15dk, 25dk (Pomodoro), 50dk
-  const SEYANLAR = [15, 25, 50];
+  // Süreler: 1dk, 3dk, 5dk
+  const SEYANLAR = [1, 3, 5];
 
-  const [seciliSure, setSeciliSure] = useState(25); // Dakika cinsinden seçili olan
-  const [kalanSaniye, setKalanSaniye] = useState(25 * 60);
+  const [seciliSure, setSeciliSure] = useState(3); 
+  const [kalanSaniye, setKalanSaniye] = useState(3 * 60);
   const [aktif, setAktif] = useState(false);
 
-  // Timer mantığı
   useEffect(() => {
     let interval = null;
     if (aktif && kalanSaniye > 0) {
@@ -20,7 +19,6 @@ const FocusScreen = () => {
         setKalanSaniye((prev) => prev - 1);
       }, 1000);
     } else if (kalanSaniye === 0 && aktif) {
-      // Süre bittiğinde ödülü ver ve sayacı sıfırla
       clearInterval(interval);
       setAktif(false);
       tamamlaOdak(seciliSure);
@@ -29,7 +27,6 @@ const FocusScreen = () => {
     return () => clearInterval(interval);
   }, [aktif, kalanSaniye]);
 
-  // Yeni süre seçimi (Sadece sayaç durmuşken çalışır)
   const sureSec = (dk) => {
     if (aktif) return;
     setSeciliSure(dk);
@@ -45,10 +42,9 @@ const FocusScreen = () => {
   const timerDurdurPesEt = () => {
     setAktif(false);
     setKalanSaniye(seciliSure * 60);
-    bozOdak(); // Cezalandırma
+    bozOdak();
   };
 
-  // Saniyeyi "DD:SS" formatına çevirme
   const formatSaniye = (toplamSaniye) => {
     const d = Math.floor(toplamSaniye / 60);
     const s = toplamSaniye % 60;
@@ -59,7 +55,7 @@ const FocusScreen = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Odaklanma Modu 🎯</Text>
       <Text style={styles.description}>
-        Süreyi bozmadan tamamlarsan büyük bir deneyim ve altın kazanacaksın. Ama pes edersen evcil hayvanın üzülür!
+        Süreyi bozmadan tamamlarsan XP ve 💰 kazanacaksın. Ama pes edersen evcil hayvanın üzülür!
       </Text>
 
       {/* Süre Seçenekleri */}
@@ -70,7 +66,7 @@ const FocusScreen = () => {
             style={[
               styles.optionButton, 
               seciliSure === dk && styles.optionButtonActive,
-              aktif && styles.optionButtonDisabled // Aktifken tıklanmasın diye
+              aktif && styles.optionButtonDisabled 
             ]}
             onPress={() => sureSec(dk)}
             activeOpacity={0.7}
@@ -87,13 +83,11 @@ const FocusScreen = () => {
         ))}
       </View>
 
-      {/* Sayaç Dairesi / Göstergesi */}
       <View style={styles.timerCircle}>
         <Text style={styles.timerText}>{formatSaniye(kalanSaniye)}</Text>
         <Text style={styles.timerStatus}>{aktif ? 'Odaklanıyorsun...' : 'Hazır!'}</Text>
       </View>
 
-      {/* Butonlar */}
       {!aktif ? (
         <TouchableOpacity style={styles.startButton} onPress={timerBaslat} activeOpacity={0.8}>
           <Text style={styles.startButtonText}>Odaklanmaya Başla</Text>
@@ -103,7 +97,6 @@ const FocusScreen = () => {
           <Text style={styles.giveUpButtonText}>Pes Et (Cezalı)</Text>
         </TouchableOpacity>
       )}
-
     </View>
   );
 };
@@ -172,13 +165,13 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
     borderWidth: 6,
-    borderColor: '#0984e3', // Dairesel progress gibi durmasını sağlar
+    borderColor: '#0984e3',
   },
   timerText: {
     fontSize: 60,
     fontWeight: '900',
     color: '#2d3436',
-    fontVariant: ['tabular-nums'], // Rakamların zıplamasını engeller
+    fontVariant: ['tabular-nums'], 
   },
   timerStatus: {
     fontSize: 16,

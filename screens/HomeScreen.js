@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { TamagotchiContext } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
-  const { isim, tur, aclik, mutluluk, level, xp, besle, oyna, isLoaded } = useContext(TamagotchiContext);
+  const { isim, tur, aclik, mutluluk, level, xp, altin, besle, oyna, isLoaded } = useContext(TamagotchiContext);
 
   if (!isLoaded) {
     return (
@@ -31,7 +31,12 @@ const HomeScreen = () => {
         
         {/* GAMIFICATION: Level ve XP (Progress Bar Şeklinde) */}
         <View style={styles.levelContainer}>
-          <Text style={styles.levelText}>Seviye {level}</Text>
+          <View style={styles.levelHeader}>
+            <Text style={styles.levelText}>Seviye {level}</Text>
+            <View style={styles.coinBadge}>
+              <Text style={styles.coinText}>🪙 {altin}</Text>
+            </View>
+          </View>
           <View style={styles.progressBarBg}>
             <View style={[styles.progressBarFill, { width: `${xp}%` }]} />
           </View>
@@ -107,11 +112,30 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: 'center',
   },
+  levelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  coinBadge: {
+    backgroundColor: '#fffbeb',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#f1c40f',
+  },
+  coinText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#f39c12',
+  },
   levelText: {
     fontSize: 18,
     fontWeight: '800',
     color: '#0984e3',
-    marginBottom: 8,
   },
   progressBarBg: {
     width: '100%',

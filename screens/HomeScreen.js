@@ -1,5 +1,5 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Pressable } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { TamagotchiContext, MARKET_ITEMS } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
@@ -7,8 +7,6 @@ const HomeScreen = () => {
     isim, tur, aclik, mutluluk, level, xp, 
     envanter, esyaKullan, oyna, isLoaded 
   } = useContext(TamagotchiContext);
-
-  const [besleModalVisible, setBesleModalVisible] = useState(false);
 
   if (!isLoaded) {
     return (
@@ -28,145 +26,81 @@ const HomeScreen = () => {
   const isHungry = aclik > 70;
   const finalBgColor = isHungry ? '#ffcccc' : '#ffffff'; 
 
-  // Envanterdeki ürünleri ayır (Eski 'mama' ve 'iksir' kalıntılarına karşı güvenlik kontrolü eklendi)
-  const beslenmeEsyalari = Object.keys(envanter).filter(
-    (id) => envanter[id] > 0 && MARKET_ITEMS[id] && (MARKET_ITEMS[id].tip === 'yiyecek' || MARKET_ITEMS[id].tip === 'icecek')
-  );
-  const ozelEsyalar = Object.keys(envanter).filter(
-    (id) => envanter[id] > 0 && MARKET_ITEMS[id] && MARKET_ITEMS[id].tip === 'ozel'
-  );
+  // Sahip olunan eşyaları filtrele
+  const sahipOlunanAcalar = Object.keys(envanter).filter((id) => envanter[id] > 0 && MARKET_ITEMS[id]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
+    <View style={styles.container}>
       
-      {/* GAMIFICATION: Özel Ögeler Çantası */}
-      <View style={styles.inventoryCard}>
-        <Text style={styles.inventoryTitle}>🎒 Özel Ögeler</Text>
+      <ScrollView contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
         
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.inventoryItemsRow}>
-          {ozelEsyalar.length > 0 ? (
-            ozelEsyalar.map((id) => (
+        <View style={[styles.card, { backgroundColor: finalBgColor }]}>
+          <View style={styles.levelContainer}>
+            <Text style={styles.levelText}>Seviye {level}</Text>
+            <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarFill, { width: `${xp}%` }]} />
+            </View>
+            <Text style={styles.xpText}>{xp} / 100 XP</Text>
+          </View>
+
+          <Text style={styles.emoji}>{getEmoji()}</Text>
+          
+          <View style={styles.infoContainer}>
+              <Text style={styles.name}>{isim}</Text>
+              <Text style={styles.type}>Tür: {tur}</Text>
+          </View>
+
+          <View style={styles.statsContainer}>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Açlık</Text>
+              <Text style={[styles.statValue, { color: isHungry ? '#c0392b' : '#2d3436' }]}>
+                {aclik}/100
+              </Text>
+            </View>
+            <View style={styles.statBox}>
+              <Text style={styles.statLabel}>Mutluluk</Text>
+              <Text style={[styles.statValue, { color: mutluluk < 30 ? '#c0392b' : '#2d3436' }]}>
+                {mutluluk}/100
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.actionContainer}>
+            <TouchableOpacity 
+              style={[styles.button, styles.playButton]} 
+              onPress={oyna}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.buttonText}>Oyna 🎾</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={{height: 20}} />
+      </ScrollView>
+
+      {/* DİKEY ENVANTER SİDEBAR'I (Mevcut ise göster) */}
+      {sahipOlunanAcalar.length > 0 && (
+        <View style={styles.sidebar}>
+          <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sidebarScroll}>
+            {sahipOlunanAcalar.map((id) => (
               <TouchableOpacity 
-                key={id}
-                style={styles.invItem}
+                key={id} 
+                style={styles.sidebarItem} 
                 onPress={() => esyaKullan(id)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.invEmojiText}>
-                  {MARKET_ITEMS[id].emoji} x{envanter[id]}
-                </Text>
-              </TouchableOpacity>
-            ))
-          ) : (
-             <Text style={styles.emptyStText}>Çantanda henüz özel eşya yok.</Text>
-          )}
-        </ScrollView>
-      </View>
-
-      <View style={[styles.card, { backgroundColor: finalBgColor }]}>
-        <View style={styles.levelContainer}>
-          <Text style={styles.levelText}>Seviye {level}</Text>
-          <View style={styles.progressBarBg}>
-            <View style={[styles.progressBarFill, { width: `${xp}%` }]} />
-          </View>
-          <Text style={styles.xpText}>{xp} / 100 XP</Text>
-        </View>
-
-        <Text style={styles.emoji}>{getEmoji()}</Text>
-        
-        <View style={styles.infoContainer}>
-            <Text style={styles.name}>{isim}</Text>
-            <Text style={styles.type}>Tür: {tur}</Text>
-        </View>
-
-        <View style={styles.statsContainer}>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Açlık</Text>
-            <Text style={[styles.statValue, { color: isHungry ? '#c0392b' : '#2d3436' }]}>
-              {aclik}/100
-            </Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statLabel}>Mutluluk</Text>
-            <Text style={[styles.statValue, { color: mutluluk < 30 ? '#c0392b' : '#2d3436' }]}>
-              {mutluluk}/100
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.actionContainer}>
-          <TouchableOpacity 
-            style={[styles.button, styles.feedButton]} 
-            onPress={() => setBesleModalVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Besle 🍽️</Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.button, styles.playButton]} 
-            onPress={oyna}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.buttonText}>Oyna 🎾</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      
-      {/* BESLENME MODALI */}
-      <Modal
-        animationType="slide"
-        transparent={true}
-        visible={besleModalVisible}
-        onRequestClose={() => setBesleModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalView}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Ne Yedirmek İstersin? 😋</Text>
-              <Pressable onPress={() => setBesleModalVisible(false)} style={styles.closeButton}>
-                <Text style={styles.closeButtonText}>X</Text>
-              </Pressable>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.modalItemsContainer} showsVerticalScrollIndicator={false}>
-              {beslenmeEsyalari.length > 0 ? (
-                beslenmeEsyalari.map((id) => (
-                  <TouchableOpacity 
-                    key={id}
-                    style={styles.foodItem}
-                    onPress={() => {
-                        esyaKullan(id);
-                        if(envanter[id] === 1 && beslenmeEsyalari.length === 1) {
-                           setBesleModalVisible(false); // sonuncu bittiyse kapat
-                        }
-                    }}
-                    activeOpacity={0.7}
-                  >
-                    <Text style={styles.foodEmoji}>{MARKET_ITEMS[id].emoji}</Text>
-                    <View style={styles.foodInfo}>
-                      <Text style={styles.foodTitle}>{MARKET_ITEMS[id].isim} (x{envanter[id]})</Text>
-                      <Text style={styles.foodDesc}>{MARKET_ITEMS[id].aciklama}</Text>
-                    </View>
-                    <View style={styles.useButton}>
-                       <Text style={styles.useButtonText}>Kullan</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <View style={styles.emptyFoodContainer}>
-                  <Text style={styles.emptyFoodEmoji}>🛒</Text>
-                  <Text style={styles.emptyFoodText}>Çantanda yiyecek veya içecek kalmamış!</Text>
-                  <Text style={styles.emptyFoodSubtext}>Markete gidip bir şeyler satın almalısın.</Text>
+                <Text style={styles.sidebarEmoji}>{MARKET_ITEMS[id].emoji}</Text>
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>x{envanter[id]}</Text>
                 </View>
-              )}
-            </ScrollView>
-            
-          </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
-      </Modal>
+      )}
 
-      <View style={{height: 20}} />
-    </ScrollView>
+    </View>
   );
 };
 
@@ -180,28 +114,30 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f1f2f6',
+    flexDirection: 'row', // Relative positioning için yatay ana taşıyıcı
   },
   contentContainer: {
     alignItems: 'center',
     padding: 20,
-    paddingTop: 10,
+    paddingTop: 30,
+    flexGrow: 1,
+    paddingRight: 80, // Sidebar'a yer açmak için sağdan boşluk bırakıyoruz
   },
   card: {
     width: '100%',
-    maxWidth: 380,
-    borderRadius: 24,
+    maxWidth: 340,
+    borderRadius: 32,
     padding: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.1,
-    shadowRadius: 15,
-    elevation: 10,
-    marginBottom: 20,
+    shadowRadius: 20,
+    elevation: 8,
   },
   levelContainer: {
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 24,
     alignItems: 'center',
   },
   levelText: {
@@ -229,15 +165,15 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   emoji: {
-    fontSize: 80,
-    marginBottom: 16,
+    fontSize: 90,
+    marginBottom: 20,
   },
   infoContainer: {
     alignItems: 'center',
     marginBottom: 24,
   },
   name: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: '800',
     color: '#2d3436',
     marginBottom: 4,
@@ -251,10 +187,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 24,
     backgroundColor: 'rgba(0, 0, 0, 0.04)', 
-    paddingVertical: 12,
-    borderRadius: 16,
+    paddingVertical: 14,
+    borderRadius: 20,
   },
   statBox: {
     alignItems: 'center',
@@ -267,182 +203,86 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '900',
   },
   actionContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     width: '100%',
-    gap: 15, 
   },
   button: {
     flex: 1, 
     flexDirection: 'row',
-    paddingVertical: 16,
-    borderRadius: 16,
+    paddingVertical: 18,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-  },
-  feedButton: {
-    backgroundColor: '#ff9f43',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 5,
   },
   playButton: {
     backgroundColor: '#10ac84',
+    shadowColor: '#10ac84',
   },
   buttonText: {
     color: '#ffffff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.5,
   },
-  // INVENTORY STYLES
-  inventoryCard: {
-    width: '100%',
-    maxWidth: 380,
+  
+  // SIDEBAR STYLES
+  sidebar: {
+    position: 'absolute',
+    right: 15,
+    top: 30,
+    bottom: 30,
+    width: 60,
+    backgroundColor: 'transparent',
+  },
+  sidebarScroll: {
+    alignItems: 'center',
+    paddingVertical: 10,
+    gap: 16,
+  },
+  sidebarItem: {
+    width: 56,
+    height: 56,
     backgroundColor: '#ffffff',
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 28, // Tam yuvarlak
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
     elevation: 5,
-    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#f1f2f6',
   },
-  inventoryTitle: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#2d3436',
-    marginBottom: 12,
+  sidebarEmoji: {
+    fontSize: 26,
   },
-  inventoryItemsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    paddingRight: 20, // scroll için boşluk
-  },
-  emptyStText: {
-    fontSize: 14,
-    color: '#b2bec3',
-    fontStyle: 'italic',
-  },
-  invItem: {
-    backgroundColor: '#f8f9fa',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: '#0984e3',
+  badge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#d63031',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 70,
+    borderWidth: 2,
+    borderColor: '#ffffff',
+    paddingHorizontal: 4,
   },
-  invEmojiText: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#0984e3',
-  },
-  // MODAL STYLES
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalView: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    padding: 24,
-    maxHeight: '70%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -10 },
-    shadowOpacity: 0.1,
-    elevation: 15,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#2d3436',
-  },
-  closeButton: {
-    backgroundColor: '#f1f2f6',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  closeButtonText: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#636e72',
-  },
-  modalItemsContainer: {
-    paddingBottom: 20,
-    gap: 12,
-  },
-  foodItem: {
-    flexDirection: 'row',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 16,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#dfe6e9',
-  },
-  foodEmoji: {
-    fontSize: 34,
-    marginRight: 12,
-  },
-  foodInfo: {
-    flex: 1,
-    marginRight: 10,
-  },
-  foodTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#2d3436',
-    marginBottom: 4,
-  },
-  foodDesc: {
-    fontSize: 12,
-    color: '#636e72',
-  },
-  useButton: {
-    backgroundColor: '#ff9f43',
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-  },
-  useButtonText: {
-    color: '#fff',
-    fontWeight: '800',
-    fontSize: 14,
-  },
-  emptyFoodContainer: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyFoodEmoji: {
-    fontSize: 50,
-    marginBottom: 10,
-  },
-  emptyFoodText: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#2d3436',
-    marginBottom: 6,
-  },
-  emptyFoodSubtext: {
-    fontSize: 14,
-    color: '#636e72',
+  badgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '900',
   }
 });
 

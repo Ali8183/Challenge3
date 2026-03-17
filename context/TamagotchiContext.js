@@ -69,6 +69,27 @@ export const TamagotchiProvider = ({ children }) => {
     saveData();
   }, [aclik, mutluluk, level, xp, rozetler, altin, envanter, isLoaded]);
 
+  // GERÇEKÇİ YAŞAM DÖNGÜSÜ (Açlık Artar, Mutluluk Düşer)
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    const interval = setInterval(() => {
+      setAclik((prevAclik) => {
+        const yeniAclik = Math.min(100, prevAclik + 1);
+        
+        setMutluluk((prevMutluluk) => {
+          // Eğer açlık 80'in üzerindeyse, hayvan acı çeker ve mutluluk çok daha hızlı (x3) düşer.
+          const azalmaMiktari = yeniAclik > 80 ? 3 : 1;
+          return Math.max(0, prevMutluluk - azalmaMiktari);
+        });
+
+        return yeniAclik;
+      });
+    }, 5000); // Test amaçlı her 5 saniyede bir
+
+    return () => clearInterval(interval);
+  }, [isLoaded]);
+
   const processGamification = (yeniMutluluk) => {
     const kazanilanXp = Math.floor(Math.random() * 11) + 10;
     let yeniXp = xp + kazanilanXp;

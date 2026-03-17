@@ -30,6 +30,35 @@ const HomeScreen = () => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer} showsVerticalScrollIndicator={false}>
       
+      {/* GAMIFICATION: Envanter (Tepeye Taşındı & Yeni Tasarım) */}
+      <View style={styles.inventoryCard}>
+        <Text style={styles.inventoryTitle}>🎒 Çantam</Text>
+        
+        <View style={styles.inventoryItemsRow}>
+          <TouchableOpacity 
+            style={[styles.invItem, envanter.mama === 0 && styles.invItemDisabled]}
+            disabled={envanter.mama === 0}
+            onPress={kullanPremiumMama}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.invEmojiText, envanter.mama === 0 && styles.invEmojiDisabled]}>
+              🍎 x{envanter.mama}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.invItem, envanter.iksir === 0 && styles.invItemDisabled]}
+            disabled={envanter.iksir === 0}
+            onPress={kullanEnerjiIksiri}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.invEmojiText, envanter.iksir === 0 && styles.invEmojiDisabled]}>
+              💊 x{envanter.iksir}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <View style={[styles.card, { backgroundColor: finalBgColor }]}>
         <View style={styles.levelContainer}>
           <Text style={styles.levelText}>Seviye {level}</Text>
@@ -79,34 +108,7 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      {/* GAMIFICATION: Envanter */}
-      <View style={styles.inventoryCard}>
-        <Text style={styles.inventoryTitle}>🎒 Çantam</Text>
-        
-        <View style={styles.inventoryItems}>
-          <View style={styles.inventoryItem}>
-            <Text style={styles.invEmoji}>🍎 x{envanter.mama}</Text>
-            <TouchableOpacity 
-              style={[styles.invButton, envanter.mama === 0 && styles.invButtonDisabled]}
-              disabled={envanter.mama === 0}
-              onPress={kullanPremiumMama}
-            >
-              <Text style={styles.invButtonText}>Kullan</Text>
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.inventoryItem}>
-            <Text style={styles.invEmoji}>💊 x{envanter.iksir}</Text>
-            <TouchableOpacity 
-              style={[styles.invButton, envanter.iksir === 0 && styles.invButtonDisabled]}
-              disabled={envanter.iksir === 0}
-              onPress={kullanEnerjiIksiri}
-            >
-              <Text style={styles.invButtonText}>Kullan</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
+      <View style={{height: 20}} />
 
       <View style={{height: 20}} />
     </ScrollView>
@@ -254,40 +256,34 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     color: '#2d3436',
-    marginBottom: 16,
+    marginBottom: 12,
   },
-  inventoryItems: {
-    flexDirection: 'column',
-    gap: 12,
-  },
-  inventoryItem: {
+  inventoryItemsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap: 15,
+  },
+  invItem: {
     backgroundColor: '#f8f9fa',
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: '#f1f2f6',
-  },
-  invEmoji: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2d3436',
-  },
-  invButton: {
-    backgroundColor: '#0984e3',
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 10,
+    paddingVertical: 12,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    borderColor: '#0984e3',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
-  invButtonDisabled: {
-    backgroundColor: '#b2bec3',
+  invItemDisabled: {
+    borderColor: '#dfe6e9',
+    backgroundColor: '#f1f2f6',
   },
-  invButtonText: {
-    color: '#ffffff',
-    fontWeight: '700',
-    fontSize: 14,
+  invEmojiText: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0984e3',
+  },
+  invEmojiDisabled: {
+    color: '#b2bec3',
   },
 });
 

@@ -1,9 +1,16 @@
 import React, { useContext } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { TamagotchiContext } from '../context/TamagotchiContext';
+import { TamagotchiContext, ACHIEVEMENTS } from '../context/TamagotchiContext';
 
 const ProfileScreen = () => {
   const { isim, tur, level, xp, rozetler } = useContext(TamagotchiContext);
+
+  const getZorlukRengi = (zorluk) => {
+    if (zorluk === 'Kolay') return '#00b894';
+    if (zorluk === 'Orta') return '#fdcb6e';
+    if (zorluk === 'Zor') return '#d63031';
+    return '#636e72';
+  };
 
   return (
     <View style={styles.container}>
@@ -23,23 +30,45 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      <Text style={styles.subtitle}>Kazanılan Rozetler ({rozetler.length})</Text>
+      <Text style={styles.subtitle}>Tüm Görevler ({rozetler.length}/{ACHIEVEMENTS.length})</Text>
       
-      {rozetler.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>Henüz hiç rozet kazanmadın.</Text>
-          <Text style={styles.emptySubtext}>Evcil hayvanınla ilgilenerek rozet kazanabilirsin!</Text>
-        </View>
-      ) : (
-        <ScrollView style={styles.badgesContainer} showsVerticalScrollIndicator={false}>
-          {rozetler.map((rozet, index) => (
-            <View key={index} style={styles.badgeItem}>
-              <Text style={styles.badgeText}>{rozet}</Text>
+      <ScrollView style={styles.badgesContainer} showsVerticalScrollIndicator={false}>
+        {ACHIEVEMENTS.map((ach) => {
+          // Açık mı kontrolü
+          const acikMi = rozetler.includes(ach.id);
+          
+          return (
+            <View key={ach.id} style={[styles.achCard, !acikMi && styles.achCardLocked]}>
+              <View style={[styles.iconWrapper, !acikMi && styles.iconWrapperLocked]}>
+                <Text style={styles.achEmoji}>{acikMi ? ach.emoji : '🔒'}</Text>
+              </View>
+              
+              <View style={styles.achInfo}>
+                <Text style={[styles.achTitle, !acikMi && styles.achTitleLocked]}>
+                  {ach.isim}
+                </Text>
+                <Text style={styles.achDesc}>{ach.aciklama}</Text>
+                <View style={styles.rewardsRow}>
+                  <Text style={styles.rewardText}>+{ach.xpOdul} XP</Text>
+                  <Text style={styles.rewardText}>+{ach.altinOdul} 💰</Text>
+                </View>
+              </View>
+
+              <View style={styles.statusBox}>
+                <Text style={[styles.zorlukText, { color: getZorlukRengi(ach.zorluk) }]}>
+                  {ach.zorluk}
+                </Text>
+                {acikMi ? (
+                  <Text style={styles.unlockedText}>✅ Kazanıldı</Text>
+                ) : (
+                  <Text style={styles.lockedText}>Kilitli</Text>
+                )}
+              </View>
             </View>
-          ))}
-          <View style={{height: 40}} /> {/* Alt boşluk */}
-        </ScrollView>
-      )}
+          );
+        })}
+        <View style={{height: 40}} /> 
+      </ScrollView>
     </View>
   );
 };
@@ -104,41 +133,93 @@ const styles = StyleSheet.create({
   badgesContainer: {
     flex: 1,
   },
-  badgeItem: {
-    backgroundColor: '#fffbeb',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: '#f1c40f',
+  // ACHIEVEMENT CARD STYLES
+  achCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badgeText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#d35400',
-  },
-  emptyState: {
     backgroundColor: '#ffffff',
-    padding: 30,
-    borderRadius: 20,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
     alignItems: 'center',
-    borderStyle: 'dashed',
-    borderWidth: 2,
-    borderColor: '#dfe6e9',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    borderWidth: 1.5,
+    borderColor: '#0984e3',
   },
-  emptyText: {
+  achCardLocked: {
+    backgroundColor: '#f5f6fa',
+    borderColor: '#dfe6e9',
+    opacity: 0.7,
+  },
+  iconWrapper: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#fffbeb',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#f1c40f',
+  },
+  iconWrapperLocked: {
+    backgroundColor: '#dfe6e9',
+    borderColor: '#b2bec3',
+  },
+  achEmoji: {
+    fontSize: 24,
+  },
+  achInfo: {
+    flex: 1,
+    marginLeft: 14,
+    marginRight: 10,
+  },
+  achTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
+    color: '#2d3436',
+    marginBottom: 4,
+  },
+  achTitleLocked: {
     color: '#636e72',
+  },
+  achDesc: {
+    fontSize: 12,
+    color: '#636e72',
+    lineHeight: 16,
     marginBottom: 8,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#b2bec3',
-    textAlign: 'center',
+  rewardsRow: {
+    flexDirection: 'row',
+    gap: 10,
   },
+  rewardText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0984e3',
+  },
+  statusBox: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    minWidth: 60,
+  },
+  zorlukText: {
+    fontSize: 12,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  unlockedText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#10ac84',
+  },
+  lockedText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#b2bec3',
+  }
 });
 
 export default ProfileScreen;

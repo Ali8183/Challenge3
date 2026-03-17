@@ -28,12 +28,12 @@ const HomeScreen = () => {
   const isHungry = aclik > 70;
   const finalBgColor = isHungry ? '#ffcccc' : '#ffffff'; 
 
-  // Envanterdeki ürünleri ayır
+  // Envanterdeki ürünleri ayır (Eski 'mama' ve 'iksir' kalıntılarına karşı güvenlik kontrolü eklendi)
   const beslenmeEsyalari = Object.keys(envanter).filter(
-    (id) => envanter[id] > 0 && (MARKET_ITEMS[id].tip === 'yiyecek' || MARKET_ITEMS[id].tip === 'icecek')
+    (id) => envanter[id] > 0 && MARKET_ITEMS[id] && (MARKET_ITEMS[id].tip === 'yiyecek' || MARKET_ITEMS[id].tip === 'icecek')
   );
   const ozelEsyalar = Object.keys(envanter).filter(
-    (id) => envanter[id] > 0 && MARKET_ITEMS[id].tip === 'ozel'
+    (id) => envanter[id] > 0 && MARKET_ITEMS[id] && MARKET_ITEMS[id].tip === 'ozel'
   );
 
   return (

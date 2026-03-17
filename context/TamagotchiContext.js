@@ -55,7 +55,14 @@ export const TamagotchiProvider = ({ children }) => {
         
         if (storedEnvanter) {
           const parsed = JSON.parse(storedEnvanter);
-          setEnvanter({ ...defaultEnvanter, ...parsed }); // Yeni eşya eklendiyse default ile merge ediyoruz
+          const cleanEnvanter = { ...defaultEnvanter };
+          // Eski state (mama, iksir vb.) kalıntılarıyla çökmesini önlemek için MARKET_ITEMS içindeki anahtarları süz
+          Object.keys(parsed).forEach(k => {
+            if (MARKET_ITEMS[k]) {
+              cleanEnvanter[k] = parsed[k];
+            }
+          });
+          setEnvanter(cleanEnvanter);
         }
 
         setIsLoaded(true);

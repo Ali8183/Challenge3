@@ -137,10 +137,40 @@ export const TamagotchiProvider = ({ children }) => {
     }
   };
 
+  const tamamlaOdak = (sure) => {
+    // Odak tamamlandığında muazzam ödül: +100 XP ve +50 Altın
+    setAltin((prev) => prev + 50);
+    
+    // XP ekleme (Seviye atlatma hesabı ile)
+    const yeniXp = xp + 100;
+    let yeniLevel = level;
+    if (yeniXp >= 100) {
+      yeniLevel += Math.floor(yeniXp / 100);
+      setLevel(yeniLevel);
+    }
+    setXp(yeniXp % 100);
+
+    Alert.alert(
+      "Odaklanma Başarılı! 🎯", 
+      `Harika çalıştın! ${sure} dakikalık odaklanma sonucunda +100 XP ve +50 Altın kazandın.`
+    );
+  };
+
+  const bozOdak = () => {
+    // Odak bozulduğunda ceza: Mutluluk -20
+    setMutluluk((prev) => Math.max(0, prev - 20));
+    
+    Alert.alert(
+      "Odak Bozuldu 🥺", 
+      "Süreyi tamamlamadan pes ettin. Evcil hayvanın biraz üzüldü (-20 Mutluluk)."
+    );
+  };
+
   return (
     <TamagotchiContext.Provider value={{ 
       isim, tur, aclik, mutluluk, level, xp, rozetler, altin, 
-      besle, oyna, satinAlPremiumMama, satinAlEnerjiIksiri, isLoaded 
+      besle, oyna, satinAlPremiumMama, satinAlEnerjiIksiri, isLoaded,
+      tamamlaOdak, bozOdak
     }}>
       {children}
     </TamagotchiContext.Provider>

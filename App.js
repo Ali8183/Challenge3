@@ -8,6 +8,7 @@ import { TamagotchiProvider } from './context/TamagotchiContext';
 import HomeScreen from './screens/HomeScreen';
 import ShopScreen from './screens/ShopScreen';
 import ProfileScreen from './screens/ProfileScreen';
+import FocusScreen from './screens/FocusScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,6 +50,13 @@ export default function App() {
             options={{
               tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
               title: "Evcil Hayvanım"
+            }}
+          />
+          <Tab.Screen 
+            name="Odak" 
+            component={FocusScreen} 
+            options={{
+              tabBarIcon: () => <Text style={{ fontSize: 24 }}>🎯</Text>,
             }}
           />
           <Tab.Screen 

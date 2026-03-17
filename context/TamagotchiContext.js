@@ -10,17 +10,18 @@ export const MARKET_ITEMS = {
   pizza: { id: 'pizza', tip: 'yiyecek', isim: 'Pizza', emoji: '🍕', fiyat: 50, aclikEtkisi: -60, mutlulukEtkisi: 15, xpEtkisi: 15, aciklama: 'Devasa bir ziyafet.' },
   su: { id: 'su', tip: 'icecek', isim: 'Su', emoji: '💧', fiyat: 5, aclikEtkisi: -5, mutlulukEtkisi: 5, xpEtkisi: 2, aciklama: 'Hayvanı ferahlatır.' },
   kahve: { id: 'kahve', tip: 'icecek', isim: 'Kahve', emoji: '☕', fiyat: 15, aclikEtkisi: -10, mutlulukEtkisi: 15, xpEtkisi: 5, aciklama: 'Enerji ve mutluluk verir.' },
-  mucizeIksiri: { id: 'mucizeIksiri', tip: 'ozel', isim: 'Mucize İksiri', emoji: '🧪', fiyat: 100, aclikEtkisi: -100, mutlulukEtkisi: 100, xpEtkisi: 50, aciklama: 'Tüm statları fuller ve çok tecrübe kazandırır.' },
+  ilac: { id: 'ilac', tip: 'ozel', isim: 'İlaç', emoji: '💊', fiyat: 30, aclikEtkisi: 0, mutlulukEtkisi: 20, xpEtkisi: 0, aciklama: 'Hastalığı anında iyileştirir.' },
+  mucizeIksiri: { id: 'mucizeIksiri', tip: 'ozel', isim: 'Mucize İksiri', emoji: '🧪', fiyat: 100, aclikEtkisi: -100, mutlulukEtkisi: 100, xpEtkisi: 50, aciklama: 'Tüm statları fuller, iyileştirir ve xp verir.' },
 };
 
 export const ACHIEVEMENTS = [
   { id: 'ilk_isirik', isim: 'İlk Isırık', aciklama: 'Hayvanı 1 kez besle.', zorluk: 'Kolay', xpOdul: 20, altinOdul: 10, emoji: '🥉' },
-  { id: 'oyuncu', isim: 'Oyuncu', aciklama: 'Hayvanla 10 kez oyna.', zorluk: 'Kolay', xpOdul: 30, altinOdul: 20, emoji: '🎾' },
+  { id: 'oyuncu', isim: 'Oyuncu', aciklama: 'Oyun salonunda 10 kez oyna.', zorluk: 'Kolay', xpOdul: 30, altinOdul: 20, emoji: '🎾' },
   { id: 'mutlu_dost', isim: 'Mutlu Dost', aciklama: 'Mutluluk seviyesini 100 yap.', zorluk: 'Kolay', xpOdul: 20, altinOdul: 10, emoji: '🌟' },
   { id: 'usta_bakici', isim: 'Usta Bakıcı', aciklama: '3. Seviyeye ulaş.', zorluk: 'Orta', xpOdul: 100, altinOdul: 50, emoji: '👑' },
   { id: 'obur', isim: 'Obur', aciklama: 'Hayvanı 10 kez besle.', zorluk: 'Orta', xpOdul: 50, altinOdul: 30, emoji: '🍔' },
   { id: 'odak_ustasi', isim: 'Odak Ustası', aciklama: 'Odak sayacını 5 kez başarıyla tamamla.', zorluk: 'Orta', xpOdul: 100, altinOdul: 50, emoji: '🥈' },
-  { id: 'hayvan_sever', isim: 'Hayvan Sever', aciklama: 'Hayvanla tam 50 kez oyna.', zorluk: 'Orta', xpOdul: 150, altinOdul: 80, emoji: '❤️' },
+  { id: 'hayvan_sever', isim: 'Hayvan Sever', aciklama: 'Oyun salonunda tam 50 kez oyna.', zorluk: 'Orta', xpOdul: 150, altinOdul: 80, emoji: '❤️' },
   { id: 'dahi', isim: 'Dahi', aciklama: 'Odak sayacını 15 kez başarıyla tamamla.', zorluk: 'Zor', xpOdul: 300, altinOdul: 150, emoji: '🧠' },
   { id: 'efsanevi_egitmen', isim: 'Efsanevi Eğitmen', aciklama: '5. Seviyeye ulaş.', zorluk: 'Zor', xpOdul: 200, altinOdul: 100, emoji: '🎓' },
   { id: 'zengin_bakici', isim: 'Zengin Bakıcı', aciklama: 'Cüzdanında aynı anda 500 Altın biriktir.', zorluk: 'Zor', xpOdul: 250, altinOdul: 100, emoji: '🥇' },
@@ -29,9 +30,6 @@ export const ACHIEVEMENTS = [
 ];
 
 export const TamagotchiProvider = ({ children }) => {
-  const [isim, setIsim] = useState("Limo");
-  const [tur, setTur] = useState("Uzaylı");
-
   const [aclik, setAclik] = useState(50);
   const [mutluluk, setMutluluk] = useState(50);
   
@@ -39,6 +37,7 @@ export const TamagotchiProvider = ({ children }) => {
   const [xp, setXp] = useState(0);
   const [rozetler, setRozetler] = useState([]);
   const [altin, setAltin] = useState(0);
+  const [hastami, setHastami] = useState(false);
 
   const defaultEnvanter = Object.keys(MARKET_ITEMS).reduce((acc, key) => { acc[key] = 0; return acc; }, {});
   const [envanter, setEnvanter] = useState(defaultEnvanter);
@@ -49,6 +48,16 @@ export const TamagotchiProvider = ({ children }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [animTetikle, setAnimTetikle] = useState(0); 
 
+  const [oncekiLevel, setOncekiLevel] = useState(1);
+
+  // Evrim Mantığı
+  const getEvrimDurumu = () => {
+    if (level >= 10) return { isim: 'Usta Limo', tur: 'Yetişkin', emoji: '🦅' };
+    if (level >= 5) return { isim: 'Limo', tur: 'Yavru', emoji: '🐣' };
+    return { isim: 'Bıdık', tur: 'Yumurta', emoji: '🥚' };
+  };
+  const evrim = getEvrimDurumu();
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -58,15 +67,23 @@ export const TamagotchiProvider = ({ children }) => {
         const storedXp = await AsyncStorage.getItem('@xp');
         const storedRozetler = await AsyncStorage.getItem('@rozetler');
         const storedAltin = await AsyncStorage.getItem('@altin');
+        const storedHastami = await AsyncStorage.getItem('@hastami');
         const storedEnvanter = await AsyncStorage.getItem('@envanter');
         const storedStats = await AsyncStorage.getItem('@istatistikler');
 
         if (storedAclik) setAclik(parseInt(storedAclik));
         if (storedMutluluk) setMutluluk(parseInt(storedMutluluk));
-        if (storedLevel) setLevel(parseInt(storedLevel));
+        
+        if (storedLevel) {
+           const initialLevel = parseInt(storedLevel);
+           setLevel(initialLevel);
+           setOncekiLevel(initialLevel);
+        }
+
         if (storedXp) setXp(parseInt(storedXp));
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
+        if (storedHastami) setHastami(storedHastami === 'true');
         
         if (storedEnvanter) {
           const parsed = JSON.parse(storedEnvanter);
@@ -102,6 +119,7 @@ export const TamagotchiProvider = ({ children }) => {
         await AsyncStorage.setItem('@xp', xp.toString());
         await AsyncStorage.setItem('@rozetler', JSON.stringify(rozetler));
         await AsyncStorage.setItem('@altin', altin.toString());
+        await AsyncStorage.setItem('@hastami', hastami.toString());
         await AsyncStorage.setItem('@envanter', JSON.stringify(envanter));
         await AsyncStorage.setItem('@istatistikler', JSON.stringify(istatistikler));
       } catch (e) {
@@ -109,19 +127,49 @@ export const TamagotchiProvider = ({ children }) => {
       }
     };
     saveData();
-  }, [aclik, mutluluk, level, xp, rozetler, altin, envanter, istatistikler, isLoaded]);
+  }, [aclik, mutluluk, level, xp, rozetler, altin, hastami, envanter, istatistikler, isLoaded]);
+
+  // Evrim Animasyonu / Kutlama
+  useEffect(() => {
+    if (isLoaded && level > oncekiLevel) {
+       if (oncekiLevel < 5 && level >= 5) {
+           setTimeout(() => Alert.alert("EVRİM GEÇİRDİ! 🌟", "Tebrikler, evcil hayvanın büyüdü ve bir Yavru (🐣) oldu!"), 500);
+           Vibration.vibrate([0, 200, 100, 400]);
+       } else if (oncekiLevel < 10 && level >= 10) {
+           setTimeout(() => Alert.alert("EVRİM GEÇİRDİ! 🎊", "Tebrikler, evcil hayvanın usta bir Yetişkin (🦅) oldu!"), 500);
+           Vibration.vibrate([0, 300, 200, 500]);
+       }
+       setOncekiLevel(level);
+    }
+  }, [level, isLoaded, oncekiLevel]);
 
   useEffect(() => {
     if (!isLoaded) return;
 
     const interval = setInterval(() => {
+      // %5 ihtimalle rastgele olay
+      if (Math.random() < 0.05) {
+         if (Math.random() < 0.5) {
+            setAltin((prev) => prev + 50);
+            Vibration.vibrate([0, 100, 100, 100]);
+            Alert.alert("Hazine Bulundu! 🗺️", "Evcil hayvanın bahçede gömülü bir hazine buldu! (+50 Altın)");
+         } else {
+            setHastami(true);
+            Vibration.vibrate([0, 500, 200, 500]);
+            Alert.alert("Hastalık! 🤒", "Eyvah, evcil hayvanın üşüttü ve hastalandı! Acilen marketten 'İlaç/İksir' alıp kullanman gerekir.");
+         }
+      }
+
       setAclik((prevAclik) => {
         const yeniAclik = Math.min(100, prevAclik + 1);
         if (prevAclik <= 80 && yeniAclik > 80) Vibration.vibrate(500); 
         
-        setMutluluk((prevMutluluk) => {
-          const azalmaMiktari = yeniAclik > 80 ? 3 : 1;
-          return Math.max(0, prevMutluluk - azalmaMiktari);
+        setHastami((currentHastami) => {
+           setMutluluk((prevMutluluk) => {
+             const azalmaMiktari = (yeniAclik > 80 ? 3 : 1) + (currentHastami ? 3 : 0);
+             return Math.max(0, prevMutluluk - azalmaMiktari);
+           });
+           return currentHastami;
         });
 
         return yeniAclik;
@@ -131,7 +179,6 @@ export const TamagotchiProvider = ({ children }) => {
     return () => clearInterval(interval);
   }, [isLoaded]);
 
-  // DEVASA BİR RPG ACHIEVEMENT (BAŞARIM) DÖNGÜSÜ
   useEffect(() => {
     if (!isLoaded) return;
     
@@ -184,40 +231,9 @@ export const TamagotchiProvider = ({ children }) => {
       }
 
       Vibration.vibrate([0, 150, 150, 150, 150, 150]);
-      setTimeout(() => {
-         Alert.alert("BAŞARIM AÇILDI! 🌟", yeniKazanilanlar.join("\n\n"));
-      }, 500);
+      setTimeout(() => Alert.alert("BAŞARIM AÇILDI! 🌟", yeniKazanilanlar.join("\n\n")), 500);
     }
   }, [istatistikler, altin, level, mutluluk, rozetler, isLoaded]);
-
-  // Sadece Rastgele XP Veren Temel Fonksiyon (Artık rozet mantığı checkAchievements'da)
-  const processBaseXP = () => {
-    const kazanilanXp = Math.floor(Math.random() * 11) + 10;
-    let yeniXp = xp + kazanilanXp;
-    let yeniLevel = level;
-
-    if (yeniXp >= 100) {
-      yeniLevel += Math.floor(yeniXp / 100);
-      yeniXp = yeniXp % 100;
-      setLevel(yeniLevel);
-      Vibration.vibrate([0, 100, 50, 100]); 
-    }
-    setXp(yeniXp);
-  };
-
-  const oyna = () => {
-    const yeniMutluluk = Math.min(100, mutluluk + 10);
-    setMutluluk(yeniMutluluk);
-    setAclik((prev) => Math.min(100, prev + 5));
-    setAltin((prev) => prev + 5); 
-    setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
-    
-    // Oyun Hissiyati - Haptic & Pop Animasyonu
-    Vibration.vibrate(30);
-    setAnimTetikle((prev) => prev + 1);
-    
-    processBaseXP();
-  };
 
   const esyaSatinAl = (itemId) => {
     const item = MARKET_ITEMS[itemId];
@@ -236,6 +252,10 @@ export const TamagotchiProvider = ({ children }) => {
     if (envanter[itemId] > 0) {
       const item = MARKET_ITEMS[itemId];
       setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
+
+      if (item.id === 'ilac' || item.id === 'mucizeIksiri') {
+         setHastami(false); // Hastalığı iyileştir
+      }
 
       if (item.tip === 'yiyecek' || item.tip === 'icecek') {
           setIstatistikler(prev => ({ ...prev, beslenmeSayisi: prev.beslenmeSayisi + 1 }));
@@ -256,8 +276,36 @@ export const TamagotchiProvider = ({ children }) => {
 
       Vibration.vibrate(50);
       setAnimTetikle((prev) => prev + 1);
+    }
+  };
+
+  const oyunOynaPuan = (puan) => {
+    setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
+    if(puan > 0) {
+      const kazanilanMutluluk = puan;
+      const kazanilanXp = puan * 2;
+      const kazanilanAltin = Math.max(5, puan); // En az 5 altın
       
-      // Sadece pop tetiklemek yerine ufak XP de eklemeyebiliriz, item.xpEtkisi eklendi.
+      setMutluluk(prev => Math.min(100, prev + kazanilanMutluluk));
+      setAltin(prev => prev + kazanilanAltin);
+
+      setXp(prev => {
+        let yeniToplam = prev + kazanilanXp;
+        if (yeniToplam >= 100) {
+           setLevel(pLevel => pLevel + Math.floor(yeniToplam / 100));
+           Vibration.vibrate([0, 100, 50, 100]);
+           return yeniToplam % 100;
+        }
+        return yeniToplam;
+      });
+
+      Vibration.vibrate([0, 50, 50, 50]);
+      Alert.alert("Oyun Bitti! 🎮", `Harika bir iş çıkardın!\n\nSkorun: ${puan}\n+${kazanilanMutluluk} Mutluluk\n+${kazanilanXp} XP\n+${kazanilanAltin} 💰`);
+      setAnimTetikle((prev) => prev + 1);
+    } else {
+      setMutluluk(prev => Math.max(0, prev - 10));
+      Vibration.vibrate(300);
+      Alert.alert("Oyun Bitti 🥺", "Hiç nesne yakalayamadın. Evcil hayvanın biraz sıkıldı (-10 Mutluluk).");
     }
   };
 
@@ -294,8 +342,8 @@ export const TamagotchiProvider = ({ children }) => {
 
   return (
     <TamagotchiContext.Provider value={{ 
-      isim, tur, aclik, mutluluk, level, xp, rozetler, altin, envanter, 
-      oyna, esyaSatinAl, esyaKullan, isLoaded, tamamlaOdak, bozOdak, animTetikle
+      ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
+      esyaSatinAl, esyaKullan, oyunOynaPuan, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}
     </TamagotchiContext.Provider>

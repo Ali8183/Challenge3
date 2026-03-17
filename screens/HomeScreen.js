@@ -1,14 +1,12 @@
-import React, { useContext, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Pressable, Animated, Easing } from 'react-native';
+import React, { useContext } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Animated, Easing } from 'react-native';
 import { TamagotchiContext, MARKET_ITEMS } from '../context/TamagotchiContext';
 
 const HomeScreen = () => {
   const { 
-    isim, tur, aclik, mutluluk, level, xp, 
-    envanter, esyaKullan, oyna, isLoaded, animTetikle
+    isim, tur, emoji, aclik, mutluluk, level, xp, hastami,
+    envanter, esyaKullan, isLoaded, animTetikle
   } = useContext(TamagotchiContext);
-
-  const [besleModalVisible, setBesleModalVisible] = useState(false);
 
   // --- ANIMATED API DEĞERLERİ ---
   const floatAnim = React.useRef(new Animated.Value(0)).current;
@@ -63,11 +61,9 @@ const HomeScreen = () => {
     );
   }
 
-  const getEmoji = () => {
-    if (mutluluk > 80) return "🤩";
-    if (mutluluk >= 50) return "😊";
-    if (mutluluk >= 30) return "😐";
-    return "🥺";
+  const renderEmoji = () => {
+    if (hastami) return '🤒 ' + (emoji || '🥚');
+    return emoji || '🥚';
   };
 
   const isHungry = aclik > 70;
@@ -91,14 +87,15 @@ const HomeScreen = () => {
           </View>
 
           {/* TAMAGOTCHI: Animated.Text kullanımı ile animasyonlar karaktere bağlandı */}
-        <Animated.Text 
-          style={[
-            styles.emoji, 
-            { transform: [{ translateY: floatAnim }, { scale: scaleAnim }] }
-          ]}
-        >
-          {getEmoji()}
-        </Animated.Text>
+          <Animated.Text 
+            style={[
+              styles.emoji, 
+              { transform: [{ translateY: floatAnim }, { scale: scaleAnim }] },
+              hastami && { opacity: 0.6 } // Hasta olunca şeffaflaşır
+            ]}
+          >
+            {renderEmoji()}
+          </Animated.Text>
           
           <View style={styles.infoContainer}>
               <Text style={styles.name}>{isim}</Text>
@@ -120,21 +117,12 @@ const HomeScreen = () => {
             </View>
           </View>
 
-          <View style={styles.actionContainer}>
-            <TouchableOpacity 
-              style={[styles.button, styles.playButton]} 
-              onPress={oyna}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.buttonText}>Oyna 🎾</Text>
-            </TouchableOpacity>
-          </View>
         </View>
 
         <View style={{height: 20}} />
       </ScrollView>
 
-      {/* DİKEY ENVANTER SİDEBAR'I (Mevcut ise göster) */}
+      {/* DİKEY ENVANTER SİDEBAR'I */}
       {sahipOlunanAcalar.length > 0 && (
         <View style={styles.sidebar}>
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.sidebarScroll}>
@@ -169,14 +157,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f1f2f6',
-    flexDirection: 'row', // Relative positioning için yatay ana taşıyıcı
+    flexDirection: 'row', 
   },
   contentContainer: {
     alignItems: 'center',
     padding: 20,
     paddingTop: 30,
     flexGrow: 1,
-    paddingRight: 80, // Sidebar'a yer açmak için sağdan boşluk bırakıyoruz
+    paddingRight: 80, 
   },
   card: {
     width: '100%',
@@ -261,33 +249,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '900',
   },
-  actionContainer: {
-    flexDirection: 'row',
-    width: '100%',
-  },
-  button: {
-    flex: 1, 
-    flexDirection: 'row',
-    paddingVertical: 18,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  playButton: {
-    backgroundColor: '#10ac84',
-    shadowColor: '#10ac84',
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: 0.5,
-  },
-  
   // SIDEBAR STYLES
   sidebar: {
     position: 'absolute',
@@ -306,7 +267,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     backgroundColor: '#ffffff',
-    borderRadius: 28, // Tam yuvarlak
+    borderRadius: 28, 
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

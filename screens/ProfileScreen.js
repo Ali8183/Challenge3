@@ -3,13 +3,37 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { TamagotchiContext, ACHIEVEMENTS } from '../context/TamagotchiContext';
 
 const ProfileScreen = () => {
-  const { isim, tur, level, xp, rozetler } = useContext(TamagotchiContext);
+  const { isim, tur, level, xp, rozetler, istatistikler, altin, mutluluk } = useContext(TamagotchiContext);
 
   const getZorlukRengi = (zorluk) => {
     if (zorluk === 'Kolay') return '#00b894';
     if (zorluk === 'Orta') return '#fdcb6e';
     if (zorluk === 'Zor') return '#d63031';
+    if (zorluk === 'Efsanevi') return '#8e44ad';
     return '#636e72';
+  };
+
+  const getIlerleme = (ach) => {
+    let mevcut = 0; let max = 1;
+    switch(ach.id) {
+      case 'ilk_isirik': mevcut = istatistikler.beslenmeSayisi; max = 1; break;
+      case 'obur': mevcut = istatistikler.beslenmeSayisi; max = 10; break;
+      case 'oyuncu': mevcut = istatistikler.oynamaSayisi; max = 10; break;
+      case 'odak_ustasi': mevcut = istatistikler.odakTamamlanmaSayisi; max = 5; break;
+      case 'dahi': mevcut = istatistikler.odakTamamlanmaSayisi; max = 15; break;
+      case 'hayvan_sever': mevcut = istatistikler.oynamaSayisi; max = 50; break;
+      case 'zengin_bakici': mevcut = altin; max = 500; break;
+      case 'milyoner': mevcut = altin; max = 1000; break;
+      case 'mukemmel_denge': mevcut = level; max = 10; break; 
+      case 'mutlu_dost': mevcut = mutluluk; max = 100; break;
+      case 'usta_bakici': mevcut = level; max = 3; break;
+      case 'efsanevi_egitmen': mevcut = level; max = 5; break;
+      case 'alisveriskolik': mevcut = istatistikler.harcananAltin || 0; max = 500; break;
+      case 'arcade_ustasi': mevcut = istatistikler.oynamaSayisi; max = 20; break;
+      case 'evrim_uzmani': mevcut = level; max = 15; break;
+    }
+    const yuzde = Math.min(100, Math.max(0, (mevcut / max) * 100));
+    return { yuzde, mevcut: Math.floor(Math.min(mevcut, max)), max };
   };
 
   return (
@@ -52,6 +76,14 @@ const ProfileScreen = () => {
                   <Text style={styles.rewardText}>+{ach.xpOdul} XP</Text>
                   <Text style={styles.rewardText}>+{ach.altinOdul} 💰</Text>
                 </View>
+                {!acikMi && (
+                  <View style={styles.progressContainer}>
+                    <View style={styles.progressBarBg}>
+                      <View style={[styles.progressBarFill, { width: `${getIlerleme(ach).yuzde}%` }]} />
+                    </View>
+                    <Text style={styles.progressText}>%{Math.round(getIlerleme(ach).yuzde)} ({getIlerleme(ach).mevcut}/{getIlerleme(ach).max})</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.statusBox}>
@@ -215,6 +247,26 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '700',
     color: '#b2bec3',
+  },
+  progressContainer: {
+    marginTop: 10,
+  },
+  progressBarBg: {
+    height: 8,
+    backgroundColor: '#dfe6e9',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#0984e3',
+  },
+  progressText: {
+    fontSize: 10,
+    color: '#636e72',
+    marginTop: 4,
+    fontWeight: '700',
+    textAlign: 'right'
   }
 });
 

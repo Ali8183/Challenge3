@@ -347,6 +347,184 @@ const MatematikOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
 };
 
 
+// --- OYUN 4: TAŞ KAĞIT MAKAS ---
+const TasKagitMakasOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
+   const [oyunBitti, setOyunBitti] = useState(false);
+   const [oyunAktif, setOyunAktif] = useState(false);
+   const [kazanilanOdul, setKazanilanOdul] = useState({ altin: 0, xp: 0, mutluluk: 0 });
+   const [sonuc, setSonuc] = useState(null); 
+   const [secimler, setSecimler] = useState({ user: null, pc: null });
+
+   const eylemler = [{id: 'tas', emoji: '✊'}, {id: 'kagit', emoji: '✋'}, {id: 'makas', emoji: '✌️'}];
+
+   const oyunaBasla = () => {
+      setSonuc(null);
+      setSecimler({ user: null, pc: null });
+      setOyunBitti(false);
+      setOyunAktif(true);
+   };
+
+   const handleSecim = (userSecim) => {
+      const pcSecim = eylemler[Math.floor(Math.random() * eylemler.length)].id;
+      setSecimler({ user: userSecim, pc: pcSecim });
+      
+      let res = 'kaybettin';
+      if (userSecim === pcSecim) { res = 'berabere'; }
+      else if ((userSecim === 'tas' && pcSecim === 'makas') || 
+               (userSecim === 'kagit' && pcSecim === 'tas') || 
+               (userSecim === 'makas' && pcSecim === 'kagit')) { 
+         res = 'kazandin'; 
+      }
+      
+      setSonuc(res);
+      setTimeout(() => {
+         if (res === 'kazandin') {
+            setKazanilanOdul({ mutluluk: 15, xp: 30, altin: 20 });
+         } else if (res === 'berabere') {
+            setKazanilanOdul({ mutluluk: 5, xp: 0, altin: 0 });
+         } else {
+            setKazanilanOdul({ mutluluk: -5, xp: 0, altin: 0 });
+         }
+         setOyunAktif(false);
+         setOyunBitti(true);
+      }, 1500);
+   };
+
+   const handleTekrarOyna = () => { oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin); oyunaBasla(); };
+   const handleMenuyeDon = () => { oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin); onMenuCikisi(); };
+
+   return (
+      <View style={styles.gameContainer}>
+         {oyunBitti ? <GameOverOverlay odul={kazanilanOdul} onTekrarOyna={handleTekrarOyna} onMenuyeDon={handleMenuyeDon} />
+         : !oyunAktif ? (
+            <View style={styles.startContainer}>
+               <Text style={styles.title}>Taş Kağıt Makas ✊✋✌️</Text>
+               <Text style={styles.desc}>Rakibini yen, 20 Altın ve 30 XP kazan!</Text>
+               <TouchableOpacity style={[styles.startButton, {backgroundColor: '#f39c12'}]} onPress={oyunaBasla} activeOpacity={0.8}>
+                  <Text style={styles.startButtonText}>Başla</Text>
+               </TouchableOpacity>
+            </View>
+         ) : (
+            <View style={styles.rpsArea}>
+               {sonuc ? (
+                  <View style={styles.rpsResult}>
+                     <Text style={styles.rpsResultTitle}>{sonuc === 'kazandin' ? '🥇 Kazandın!' : sonuc === 'berabere' ? '🤝 Berabere' : '💀 Kaybettin'}</Text>
+                     <View style={styles.rpsMatch}>
+                        <Text style={styles.rpsEmoji}>{eylemler.find(e => e.id === secimler.user)?.emoji}</Text>
+                        <Text style={styles.rpsVs}>VS</Text>
+                        <Text style={styles.rpsEmoji}>{eylemler.find(e => e.id === secimler.pc)?.emoji}</Text>
+                     </View>
+                  </View>
+               ) : (
+                  <View style={styles.rpsChoices}>
+                     <Text style={styles.rpsChooseTitle}>Seçimini Yap!</Text>
+                     <View style={styles.rpsRow}>
+                        {eylemler.map(e => (
+                           <TouchableOpacity key={e.id} style={styles.rpsBtn} onPress={() => handleSecim(e.id)}>
+                              <Text style={styles.rpsBtnEmoji}>{e.emoji}</Text>
+                           </TouchableOpacity>
+                        ))}
+                     </View>
+                  </View>
+               )}
+            </View>
+         )}
+      </View>
+   );
+};
+
+// --- OYUN 5: RENK AVCISI ---
+const RENKLER = [
+   { isim: 'KIRMIZI', renk: '#e74c3c' },
+   { isim: 'MAVİ', renk: '#3498db' },
+   { isim: 'YEŞİL', renk: '#2ecc71' },
+   { isim: 'SARI', renk: '#f1c40f' },
+   { isim: 'SİYAH', renk: '#2d3436' },
+   { isim: 'MOR', renk: '#9b59b6' }
+];
+
+const RenkAvcisiOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
+   const [oyunBitti, setOyunBitti] = useState(false);
+   const [oyunAktif, setOyunAktif] = useState(false);
+   const [kazanilanOdul, setKazanilanOdul] = useState({ altin: 0, xp: 0, mutluluk: 0 });
+   const [kalanSure, setKalanSure] = useState(10);
+   const [skor, setSkor] = useState(0);
+   const [hedefRenk, setHedefRenk] = useState(null);
+   const [siklar, setSiklar] = useState([]);
+
+   const oyunaBasla = () => {
+      setSkor(0);
+      setKalanSure(10);
+      setOyunBitti(false);
+      setOyunAktif(true);
+      soruOlustur();
+   };
+
+   const soruOlustur = () => {
+      const gecerliRenkler = [...RENKLER].sort(() => Math.random() - 0.5).slice(0, 4);
+      const dogru = gecerliRenkler[Math.floor(Math.random() * 4)];
+      setHedefRenk(dogru);
+      setSiklar(gecerliRenkler);
+   };
+
+   useEffect(() => {
+      let timer = null;
+      if (oyunAktif && kalanSure > 0) {
+         timer = setInterval(() => setKalanSure(p => p - 1), 1000);
+      } else if (kalanSure <= 0 && oyunAktif) {
+         setOyunAktif(false);
+         const wPuan = skor * 4;
+         let kMut = wPuan; let kX = wPuan * 2; let kAl = Math.max(5, wPuan);
+         if(skor === 0) { kMut = -10; kX = 0; kAl = 0; }
+         setKazanilanOdul({ mutluluk: kMut, xp: kX, altin: kAl });
+         setOyunBitti(true);
+      }
+      return () => clearInterval(timer);
+   }, [oyunAktif, kalanSure, skor]);
+
+   const secimKontrol = (secim) => {
+      if (secim.isim === hedefRenk.isim) {
+         setSkor(p => p + 1);
+      } else {
+         setKalanSure(p => Math.max(0, p - 2));
+      }
+      soruOlustur();
+   };
+
+   const handleTekrarOyna = () => { oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin); oyunaBasla(); };
+   const handleMenuyeDon = () => { oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin); onMenuCikisi(); };
+
+   return (
+      <View style={styles.gameContainer}>
+         {oyunBitti ? <GameOverOverlay odul={kazanilanOdul} onTekrarOyna={handleTekrarOyna} onMenuyeDon={handleMenuyeDon} />
+         : !oyunAktif ? (
+            <View style={styles.startContainer}>
+               <Text style={styles.title}>Renk Avcısı 🎨</Text>
+               <Text style={styles.desc}>Kutunun GÖRSEL RENGİNİ okuyan yazıyı bul! (Hatalar süreden yer)</Text>
+               <TouchableOpacity style={[styles.startButton, {backgroundColor: '#e17055'}]} onPress={oyunaBasla} activeOpacity={0.8}>
+                  <Text style={styles.startButtonText}>Başla</Text>
+               </TouchableOpacity>
+            </View>
+         ) : (
+            <View style={styles.colorArea}>
+               <View style={styles.colorHeader}>
+                  <Text style={styles.scoreText}>Skor: {skor}</Text>
+                  <Text style={styles.timeText}>Süre: {kalanSure}s</Text>
+               </View>
+               <View style={[styles.colorBoxWrapper, { backgroundColor: hedefRenk?.renk }]} />
+               <View style={styles.colorBtnGrid}>
+                  {siklar.map((secim, i) => (
+                     <TouchableOpacity key={i} style={styles.colorBtn} onPress={() => secimKontrol(secim)} activeOpacity={0.8}>
+                        <Text style={styles.colorBtnText}>{secim.isim}</Text>
+                     </TouchableOpacity>
+                  ))}
+               </View>
+            </View>
+         )}
+      </View>
+   );
+};
+
 // --- ANA OYUN SEÇİM & RENDER EKRANI ---
 const GameScreen = () => {
   const { isLoaded, oyunSessizOdulVer } = useContext(TamagotchiContext);
@@ -361,6 +539,8 @@ const GameScreen = () => {
   if (secilenOyun === 'tap') return <TapTapGame onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
   if (secilenOyun === 'memory') return <HafizaOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
   if (secilenOyun === 'math') return <MatematikOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
+  if (secilenOyun === 'rps') return <TasKagitMakasOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
+  if (secilenOyun === 'color') return <RenkAvcisiOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
 
   return (
     <ScrollView style={styles.menuContainer} contentContainerStyle={{paddingBottom:40}} showsVerticalScrollIndicator={false}>
@@ -388,6 +568,22 @@ const GameScreen = () => {
            <View style={styles.cardInfo}>
               <Text style={styles.cardTitle}>Hızlı Matematik</Text>
               <Text style={styles.cardDesc}>15 Saniye içinde basit işlemleri zihinden çöz. Yanlış cevaplar süreden yer!</Text>
+           </View>
+       </TouchableOpacity>
+
+       <TouchableOpacity style={styles.oyunCard} onPress={() => setSecilenOyun('rps')} activeOpacity={0.8}>
+           <Text style={styles.cardEmoji}>✊</Text>
+           <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle}>Taş-Kağıt-Makas</Text>
+              <Text style={styles.cardDesc}>Rakibine karşı doğru hamleyi yap. Galibiyet anında 20 Altın ve 30 XP senin olur!</Text>
+           </View>
+       </TouchableOpacity>
+
+       <TouchableOpacity style={styles.oyunCard} onPress={() => setSecilenOyun('color')} activeOpacity={0.8}>
+           <Text style={styles.cardEmoji}>🎨</Text>
+           <View style={styles.cardInfo}>
+              <Text style={styles.cardTitle}>Renk Avcısı</Text>
+              <Text style={styles.cardDesc}>Ekrana çıkan kutunun rengini anında seç! Dikkat et, yanlış şıklar zamanından silecek.</Text>
            </View>
        </TouchableOpacity>
     </ScrollView>
@@ -466,7 +662,27 @@ const styles = StyleSheet.create({
   goBtn: { width: '100%', paddingVertical: 18, borderRadius: 16, alignItems: 'center' },
   goBtnAgain: { backgroundColor: '#10ac84' },
   goBtnMenu: { backgroundColor: '#d63031' },
-  goBtnText: { color: '#ffffff', fontSize: 18, fontWeight: '900' }
+  goBtnText: { color: '#ffffff', fontSize: 18, fontWeight: '900' },
+
+  // RPS (TAŞ KAĞIT MAKAS)
+  rpsArea: { flex: 1, backgroundColor: '#f39c12', justifyContent: 'center', alignItems: 'center' },
+  rpsResultTitle: { fontSize: 36, fontWeight: '900', color: '#ffffff', marginBottom: 40, textAlign: 'center' },
+  rpsMatch: { flexDirection: 'row', alignItems: 'center', gap: 20 },
+  rpsEmoji: { fontSize: 80 },
+  rpsVs: { fontSize: 40, fontWeight: '900', color: '#ffffff' },
+  rpsChoices: { alignItems: 'center' },
+  rpsChooseTitle: { fontSize: 32, fontWeight: '900', color: '#ffffff', marginBottom: 40 },
+  rpsRow: { flexDirection: 'row', gap: 20 },
+  rpsBtn: { backgroundColor: '#ffffff', width: 90, height: 90, borderRadius: 45, justifyContent: 'center', alignItems: 'center', elevation: 10 },
+  rpsBtnEmoji: { fontSize: 45 },
+
+  // COLOR CATCHER
+  colorArea: { flex: 1, backgroundColor: '#e17055' },
+  colorHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 24, paddingTop: 40 },
+  colorBoxWrapper: { width: 200, height: 200, borderRadius: 20, alignSelf: 'center', marginTop: 30, elevation: 10, borderWidth: 5, borderColor: '#ffffff' },
+  colorBtnGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15, marginTop: 50, paddingHorizontal: 20 },
+  colorBtn: { backgroundColor: '#ffffff', width: '45%', paddingVertical: 20, borderRadius: 16, alignItems: 'center', elevation: 5 },
+  colorBtnText: { fontSize: 20, fontWeight: '900', color: '#2d3436' }
 });
 
 export default GameScreen;

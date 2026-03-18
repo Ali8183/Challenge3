@@ -12,6 +12,10 @@ export const MARKET_ITEMS = {
   kahve: { id: 'kahve', tip: 'icecek', isim: 'Kahve', emoji: '☕', fiyat: 15, aclikEtkisi: -10, mutlulukEtkisi: 15, xpEtkisi: 5, aciklama: 'Enerji ve mutluluk verir.' },
   ilac: { id: 'ilac', tip: 'ozel', isim: 'İlaç', emoji: '💊', fiyat: 30, aclikEtkisi: 0, mutlulukEtkisi: 20, xpEtkisi: 0, aciklama: 'Hastalığı anında iyileştirir.' },
   mucizeIksiri: { id: 'mucizeIksiri', tip: 'ozel', isim: 'Mucize İksiri', emoji: '🧪', fiyat: 100, aclikEtkisi: -100, mutlulukEtkisi: 100, xpEtkisi: 50, aciklama: 'Tüm statları fuller, iyileştirir ve xp verir.' },
+  buyukPizza: { id: 'buyukPizza', tip: 'yiyecek', isim: 'Büyük Boy Pizza', emoji: '🍕', fiyat: 25, aclikEtkisi: -40, mutlulukEtkisi: 10, xpEtkisi: 10, aciklama: 'Açlığı 40 azaltır. Çok doyurucudur.' },
+  enerjiIcecegi: { id: 'enerjiIcecegi', tip: 'icecek', isim: 'Enerji İçeceği', emoji: '🥤', fiyat: 20, aclikEtkisi: 10, mutlulukEtkisi: 30, xpEtkisi: 5, aciklama: 'Mutluluğu 30 artırır ama açlığı 10 artırır.' },
+  sihirliIksir: { id: 'sihirliIksir', tip: 'ozel', isim: 'Sihirli İksir', emoji: '🧪', fiyat: 75, aclikEtkisi: 0, mutlulukEtkisi: 100, xpEtkisi: 30, aciklama: 'Anında iyileştirir, mutluluğu 100 yapar ve +30 XP verir.' },
+  kralTaci: { id: 'kralTaci', tip: 'ozel', isim: 'Kral Tacı', emoji: '👑', fiyat: 200, aclikEtkisi: 0, mutlulukEtkisi: 0, xpEtkisi: 150, aciklama: 'Muazzam prestij. Anında +150 XP verir.' },
 };
 
 export const ACHIEVEMENTS = [
@@ -27,6 +31,9 @@ export const ACHIEVEMENTS = [
   { id: 'zengin_bakici', isim: 'Zengin Bakıcı', aciklama: 'Cüzdanında aynı anda 500 Altın biriktir.', zorluk: 'Zor', xpOdul: 250, altinOdul: 100, emoji: '🥇' },
   { id: 'milyoner', isim: 'Milyoner', aciklama: 'Cüzdanında aynı anda 1000 Altın biriktir.', zorluk: 'Zor', xpOdul: 500, altinOdul: 300, emoji: '💎' },
   { id: 'mukemmel_denge', isim: 'Mükemmel Denge', aciklama: 'Mutluluğunu yüksek tutarak 10. Seviyeye ulaş.', zorluk: 'Zor', xpOdul: 500, altinOdul: 300, emoji: '🏆' },
+  { id: 'alisveriskolik', isim: 'Alışverişkolik', aciklama: 'Markette toplam 500 Altın harca.', zorluk: 'Orta', xpOdul: 100, altinOdul: 25, emoji: '🛍️' },
+  { id: 'arcade_ustasi', isim: 'Arcade Ustası', aciklama: 'Oyun salonunda 20 kez yarış.', zorluk: 'Orta', xpOdul: 150, altinOdul: 50, emoji: '🕹️' },
+  { id: 'evrim_uzmani', isim: 'Evrim Uzmanı', aciklama: '15. Seviyeye ulaş.', zorluk: 'Efsanevi', xpOdul: 1000, altinOdul: 500, emoji: '🚀' },
 ];
 
 export const TamagotchiProvider = ({ children }) => {
@@ -42,7 +49,7 @@ export const TamagotchiProvider = ({ children }) => {
   const defaultEnvanter = Object.keys(MARKET_ITEMS).reduce((acc, key) => { acc[key] = 0; return acc; }, {});
   const [envanter, setEnvanter] = useState(defaultEnvanter);
 
-  const defaultIstatistikler = { beslenmeSayisi: 0, odakTamamlanmaSayisi: 0, oynamaSayisi: 0 };
+  const defaultIstatistikler = { beslenmeSayisi: 0, odakTamamlanmaSayisi: 0, oynamaSayisi: 0, harcananAltin: 0 };
   const [istatistikler, setIstatistikler] = useState(defaultIstatistikler);
 
   const [isReady, setIsReady] = useState(false);
@@ -205,6 +212,9 @@ export const TamagotchiProvider = ({ children }) => {
           case 'mutlu_dost': kazanildiMi = mutluluk >= 100; break;
           case 'usta_bakici': kazanildiMi = level >= 3; break;
           case 'efsanevi_egitmen': kazanildiMi = level >= 5; break;
+          case 'alisveriskolik': kazanildiMi = (istatistikler.harcananAltin || 0) >= 500; break;
+          case 'arcade_ustasi': kazanildiMi = istatistikler.oynamaSayisi >= 20; break;
+          case 'evrim_uzmani': kazanildiMi = level >= 15; break;
         }
 
         if (kazanildiMi) {
@@ -241,6 +251,7 @@ export const TamagotchiProvider = ({ children }) => {
     const item = MARKET_ITEMS[itemId];
     if (altin >= item.fiyat) {
       setAltin((prev) => prev - item.fiyat);
+      setIstatistikler((prev) => ({ ...prev, harcananAltin: (prev.harcananAltin || 0) + item.fiyat }));
       setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] + 1 }));
       Vibration.vibrate([0, 50, 50, 50]); 
       Alert.alert("Satın Alma Başarılı! 🛒", `${item.isim} çantana eklendi.`);
@@ -256,7 +267,7 @@ export const TamagotchiProvider = ({ children }) => {
 
       setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
 
-      if (item.id === 'ilac' || item.id === 'mucizeIksiri') {
+      if (item.id === 'ilac' || item.id === 'mucizeIksiri' || item.id === 'sihirliIksir') {
          setHastami(false); // Hastalığı iyileştir
       }
 
@@ -373,7 +384,7 @@ export const TamagotchiProvider = ({ children }) => {
 
   return (
     <TamagotchiContext.Provider value={{ 
-      ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
+      ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami, istatistikler,
       esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isReady, isLoaded: isReady, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}

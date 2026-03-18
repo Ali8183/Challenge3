@@ -38,6 +38,8 @@ export const TamagotchiProvider = ({ children }) => {
   const [rozetler, setRozetler] = useState([]);
   const [altin, setAltin] = useState(0);
   const [hastami, setHastami] = useState(false);
+  const [enerji, setEnerji] = useState(100);
+  const [uyuyorMu, setUyuyorMu] = useState(false);
 
   const defaultEnvanter = Object.keys(MARKET_ITEMS).reduce((acc, key) => { acc[key] = 0; return acc; }, {});
   const [envanter, setEnvanter] = useState(defaultEnvanter);
@@ -68,6 +70,7 @@ export const TamagotchiProvider = ({ children }) => {
         const storedRozetler = await AsyncStorage.getItem('@rozetler');
         const storedAltin = await AsyncStorage.getItem('@altin');
         const storedHastami = await AsyncStorage.getItem('@hastami');
+        const storedEnerji = await AsyncStorage.getItem('@enerji');
         const storedEnvanter = await AsyncStorage.getItem('@envanter');
         const storedStats = await AsyncStorage.getItem('@istatistikler');
 
@@ -84,6 +87,7 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
         if (storedHastami) setHastami(storedHastami === 'true');
+        if (storedEnerji) setEnerji(parseInt(storedEnerji));
         
         if (storedEnvanter) {
           const parsed = JSON.parse(storedEnvanter);
@@ -120,6 +124,7 @@ export const TamagotchiProvider = ({ children }) => {
         await AsyncStorage.setItem('@rozetler', JSON.stringify(rozetler));
         await AsyncStorage.setItem('@altin', altin.toString());
         await AsyncStorage.setItem('@hastami', hastami.toString());
+        await AsyncStorage.setItem('@enerji', enerji.toString());
         await AsyncStorage.setItem('@envanter', JSON.stringify(envanter));
         await AsyncStorage.setItem('@istatistikler', JSON.stringify(istatistikler));
       } catch (e) {
@@ -127,7 +132,7 @@ export const TamagotchiProvider = ({ children }) => {
       }
     };
     saveData();
-  }, [aclik, mutluluk, level, xp, rozetler, altin, hastami, envanter, istatistikler, isLoaded]);
+  }, [aclik, mutluluk, level, xp, rozetler, altin, hastami, enerji, envanter, istatistikler, isLoaded]);
 
   // Evrim Animasyonu / Kutlama
   useEffect(() => {
@@ -144,9 +149,30 @@ export const TamagotchiProvider = ({ children }) => {
   }, [level, isLoaded, oncekiLevel]);
 
   useEffect(() => {
+    if (isLoaded && enerji >= 100 && uyuyorMu) {
+       setUyuyorMu(false);
+       Vibration.vibrate([0, 200, 100, 200]);
+       Alert.alert('Günaydın! ☀️', 'Evcil hayvanın tamamen dinlendi ve uyandı!');
+    }
+  }, [enerji, uyuyorMu, isLoaded]);
+
+  const uykuRef = useRef(false);
+  useEffect(() => {
+     uykuRef.current = uyuyorMu;
+  }, [uyuyorMu]);
+
+  useEffect(() => {
     if (!isLoaded) return;
 
     const interval = setInterval(() => {
+      // Uyurken hızlı enerji topla, geri kalanını durdur
+      if (uykuRef.current) {
+         setEnerji(prev => Math.min(100, prev + 10));
+         return; // Uyurken acıkmasın ve rastgele olay olmasın
+      }
+
+      setEnerji(prev => Math.max(0, prev - 1));
+
       // %5 ihtimalle rastgele olay
       if (Math.random() < 0.05) {
          if (Math.random() < 0.5) {
@@ -251,6 +277,12 @@ export const TamagotchiProvider = ({ children }) => {
   const esyaKullan = (itemId) => {
     if (envanter[itemId] > 0) {
       const item = MARKET_ITEMS[itemId];
+
+      if (enerji < 15 && (item.tip === 'yiyecek' || item.tip === 'icecek')) {
+         Alert.alert("Çok Yorgun! 😴", "Evcil hayvanın çok yorgun! Hiçbir şey yiyecek hali yok, acilen uyuması lazım.");
+         return;
+      }
+
       setEnvanter((prev) => ({ ...prev, [itemId]: prev[itemId] - 1 }));
 
       if (item.id === 'ilac' || item.id === 'mucizeIksiri') {
@@ -280,6 +312,7 @@ export const TamagotchiProvider = ({ children }) => {
   };
 
   const oyunSessizOdulVer = (kMutluluk, kXp, kAltin) => {
+    setEnerji(prev => Math.max(0, prev - 15)); // Oyun oynadı yoruldu
     setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
     setMutluluk(prev => Math.min(100, Math.max(0, prev + kMutluluk)));
     if (kAltin > 0) setAltin(prev => prev + kAltin);
@@ -300,6 +333,7 @@ export const TamagotchiProvider = ({ children }) => {
   };
 
   const oyunOynaPuan = (puan) => {
+    setEnerji(prev => Math.max(0, prev - 15));
     setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
     if(puan > 0) {
       const kazanilanMutluluk = puan;
@@ -363,6 +397,7 @@ export const TamagotchiProvider = ({ children }) => {
   return (
     <TamagotchiContext.Provider value={{ 
       ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
+      enerji, uyuyorMu, setUyuyorMu,
       esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}

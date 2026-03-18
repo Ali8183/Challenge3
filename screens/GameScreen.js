@@ -349,10 +349,18 @@ const MatematikOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
 
 // --- ANA OYUN SEÇİM & RENDER EKRANI ---
 const GameScreen = () => {
-  const { isLoaded, oyunSessizOdulVer } = useContext(TamagotchiContext);
+  const { isLoaded, oyunSessizOdulVer, enerji } = useContext(TamagotchiContext);
   const [secilenOyun, setSecilenOyun] = useState(null); 
 
   if (!isLoaded) return null;
+
+  const handleOyunSec = (oyunId) => {
+     if (enerji < 15) {
+        Alert.alert("Çok Yorgun! 😴", "Evcil hayvanın yorgunluktan bitap durumda. Oyun oynamadan önce 'Yatak Odası'na gidip biraz uyumalı!");
+        return;
+     }
+     setSecilenOyun(oyunId);
+  };
 
   const handleMenuDonus = () => {
      setSecilenOyun(null);
@@ -367,7 +375,7 @@ const GameScreen = () => {
        <Text style={styles.menuTitle}>🎮 Oyun Salonu</Text>
        <Text style={styles.menuSub}>Eğlenerek Evcil Hayvanını Mutlu Et ve Bolca XP ile Altın Kazan!</Text>
        
-       <TouchableOpacity style={styles.oyunCard} onPress={() => setSecilenOyun('tap')} activeOpacity={0.8}>
+       <TouchableOpacity style={styles.oyunCard} onPress={() => handleOyunSec('tap')} activeOpacity={0.8}>
            <Text style={styles.cardEmoji}>🧶</Text>
            <View style={styles.cardInfo}>
               <Text style={styles.cardTitle}>Tap-Tap Catcher</Text>
@@ -375,7 +383,7 @@ const GameScreen = () => {
            </View>
        </TouchableOpacity>
 
-       <TouchableOpacity style={styles.oyunCard} onPress={() => setSecilenOyun('memory')} activeOpacity={0.8}>
+       <TouchableOpacity style={styles.oyunCard} onPress={() => handleOyunSec('memory')} activeOpacity={0.8}>
            <Text style={styles.cardEmoji}>🃏</Text>
            <View style={styles.cardInfo}>
               <Text style={styles.cardTitle}>Hafıza Kartları</Text>
@@ -383,7 +391,7 @@ const GameScreen = () => {
            </View>
        </TouchableOpacity>
 
-       <TouchableOpacity style={styles.oyunCard} onPress={() => setSecilenOyun('math')} activeOpacity={0.8}>
+       <TouchableOpacity style={styles.oyunCard} onPress={() => handleOyunSec('math')} activeOpacity={0.8}>
            <Text style={styles.cardEmoji}>🧠</Text>
            <View style={styles.cardInfo}>
               <Text style={styles.cardTitle}>Hızlı Matematik</Text>

@@ -9,6 +9,7 @@ import ShopScreen from './screens/ShopScreen';
 import ProfileScreen from './screens/ProfileScreen';
 import FocusScreen from './screens/FocusScreen';
 import GameScreen from './screens/GameScreen';
+import BedroomScreen from './screens/BedroomScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -61,6 +62,14 @@ const NavigationLogic = () => {
           options={{
             tabBarIcon: () => <Text style={{ fontSize: 24 }}>🏠</Text>,
             title: "Evcil Hayvanım"
+          }}
+        />
+        <Tab.Screen 
+          name="Uyku" 
+          component={BedroomScreen} 
+          options={{
+            tabBarIcon: () => <Text style={{ fontSize: 24 }}>🛏️</Text>,
+            title: "Yatak Odası"
           }}
         />
         <Tab.Screen 

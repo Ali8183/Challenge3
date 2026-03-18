@@ -172,10 +172,10 @@ const styles = StyleSheet.create({
     borderRadius: 32,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    
+     height: 10 },
+    
+    
     elevation: 8,
   },
   levelContainer: {
@@ -270,10 +270,10 @@ const styles = StyleSheet.create({
     borderRadius: 28, 
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
+    
+     height: 4 },
+    
+    
     elevation: 5,
     borderWidth: 2,
     borderColor: '#f1f2f6',

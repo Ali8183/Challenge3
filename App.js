@@ -35,17 +35,17 @@ const NavigationLogic = () => {
             backgroundColor: '#ffffff',
             borderTopWidth: 0,
             elevation: 10,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.1,
-            shadowRadius: 10,
+            
+             height: -2 },
+            
+            
             height: 60,
             paddingBottom: 10,
           },
           headerStyle: {
             backgroundColor: '#ffffff',
             elevation: 0, 
-            shadowOpacity: 0, 
+             
             borderBottomWidth: 1,
             borderBottomColor: '#f1f2f6',
           },

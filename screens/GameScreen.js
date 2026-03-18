@@ -408,8 +408,8 @@ const styles = StyleSheet.create({
   menuSub: { fontSize: 15, color: '#636e72', marginBottom: 30, lineHeight: 22 },
   oyunCard: {
      flexDirection: 'row', backgroundColor: '#ffffff', padding: 20, borderRadius: 24,
-     marginBottom: 20, alignItems: 'center', shadowColor: '#000',
-     shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 5,
+     marginBottom: 20, alignItems: 'center', 
+      height: 6 },   elevation: 5,
   },
   cardEmoji: { fontSize: 50, marginRight: 20 },
   cardInfo: { flex: 1 },
@@ -462,8 +462,8 @@ const styles = StyleSheet.create({
   gameOverCard: {
      width: '100%', maxWidth: 350, backgroundColor: '#ffffff',
      borderRadius: 30, padding: 30, alignItems: 'center',
-     shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
-     shadowOpacity: 0.2, shadowRadius: 20, elevation: 15
+       height: 10 },
+       elevation: 15
   },
   gameOverEmoji: { fontSize: 60, marginBottom: 10 },
   gameOverTitle: { fontSize: 28, fontWeight: '900', color: '#2d3436', marginBottom: 20 },

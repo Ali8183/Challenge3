@@ -92,10 +92,10 @@ const styles = StyleSheet.create({
     padding: 24,
     marginBottom: 30,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
+    
+     height: 4 },
+    
+    
     elevation: 5,
   },
   petName: {
@@ -141,10 +141,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
+    
+     height: 2 },
+    
+    
     elevation: 2,
     borderWidth: 1.5,
     borderColor: '#0984e3',

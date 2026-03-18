@@ -74,10 +74,10 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 20,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
+    
+     height: 4 },
+    
+    
     elevation: 3,
   },
   itemEmoji: {

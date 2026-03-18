@@ -404,17 +404,21 @@ export const TamagotchiProvider = ({ children }) => {
     );
   };
 
+  if (!isLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f2f6' }}>
+        <Text style={{ fontSize: 18, color: '#2d3436' }}>Yükleniyor...</Text>
+      </View>
+    );
+  }
+
   return (
     <TamagotchiContext.Provider value={{ 
       ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
       enerji, uyuyorMu, setUyuyorMu,
       esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
-      {!isLoaded ? (
-         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ fontSize: 18, color: '#2d3436' }}>Yükleniyor...</Text>
-         </View>
-      ) : children}
+      {children}
     </TamagotchiContext.Provider>
   );
 };

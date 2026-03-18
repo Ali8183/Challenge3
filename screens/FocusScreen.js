@@ -159,10 +159,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 40,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
+    
+     height: 10 },
+    
+    
     elevation: 10,
     borderWidth: 6,
     borderColor: '#0984e3',
@@ -185,10 +185,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#10ac84',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    
+     height: 6 },
+    
+    
     elevation: 5,
   },
   startButtonText: {
@@ -203,10 +203,10 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    shadowColor: '#d63031',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
+    
+     height: 6 },
+    
+    
     elevation: 5,
   },
   giveUpButtonText: {

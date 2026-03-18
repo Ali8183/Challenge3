@@ -109,13 +109,27 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
      }
    }, [secilenler]);
 
+   const oyundanCik = () => {
+      setKartlar([]);
+      setSecilenler([]);
+      setEslesenler([]);
+      const sonHamle = Number(hamle) || 0;
+      setHamle(0);
+      onHafizaKartiBitti(sonHamle); 
+   };
+
    useEffect(() => {
       if (oyunAktif && eslesenler.length === MAKS_KART) {
          setOyunAktif(false);
-         // Oyunu bitir ve Context'e spesifik hafıza ödülünü ver (oyun2Tetikle)
-         onHafizaKartiBitti(hamle);
+         setTimeout(() => {
+            Alert.alert(
+              "Tebrikler! 🎉", 
+              "Tüm kartları eşleştirdin! Ödüller hesabına eklendi.", 
+              [{ text: "Harika", onPress: () => oyundanCik() }]
+            );
+         }, 500);
       }
-   }, [eslesenler]);
+   }, [eslesenler, oyunAktif]);
 
    const kartSec = (index) => {
       if (secilenler.length < 2 && !secilenler.includes(index) && !eslesenler.includes(index)) {
@@ -281,15 +295,11 @@ const GameScreen = () => {
   // 2) Memory Sonucu (Özel Ödül)
   const handleMemoryBitti = (hamle) => {
      setSecilenOyun(null);
-     const bonusAltin = hamle <= 10 ? 30 : 15; // Az hamle = çok altın
-     oyunOynaPuan(bonustanSpesifikCevir(20, 30, bonusAltin)); 
-     // Mevcut oyunOynaPuan tek parametre (puan) alıyor ancak Context içinde yeni bir fonk yaratmak daha iyi olur. 
-     // Contexti bozmamak için oyunOynaRewardCustom isminde bir tetikleyici yerine setTimeout ile Alert+GlobalState update edilebilir.
      
-     // Context içinde altinKazanAciktan / xp / mutluluk fonkları olmadığı için `oyunOynaPuanOdul` tetikleyeceğiz. 
-     // Mevcut `oyunOynaPuan` 10 puan verildiğinde 10 mutluluk, 20 xp, 10 altın verir. 
-     // Hafıza oyununa özel (20 Mutluluk, 30 XP, 20 Altın istendiği için kabaca 15 puan yollayarak mevcut dengeyi kullanıyoruz):
-     oyunOynaPuan(15); 
+     const gercekHamle = Number(hamle) || 10;
+     const kazanilanPuan = gercekHamle <= 12 ? 15 : 10; // Az hamle = çok puan
+
+     oyunOynaPuan(kazanilanPuan); 
   };
 
   // 3) Math Sonucu 

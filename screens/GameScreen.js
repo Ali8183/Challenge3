@@ -1,12 +1,43 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import { TamagotchiContext } from '../context/TamagotchiContext';
 
 const windowWidth = Dimensions.get('window').width;
 
+// --- REUSABLE GAME OVER UI ---
+const GameOverOverlay = ({ odul, onTekrarOyna, onMenuyeDon }) => {
+   return (
+      <View style={styles.gameOverOverlay}>
+         <View style={styles.gameOverCard}>
+            <Text style={styles.gameOverEmoji}>{odul.mutluluk >= 0 ? '🎉' : '🥺'}</Text>
+            <Text style={styles.gameOverTitle}>Oyun Bitti!</Text>
+            
+            <View style={styles.rewardsContainer}>
+               {odul.altin > 0 && <Text style={styles.rewardText}>+{odul.altin} 🪙 Altın</Text>}
+               {odul.xp > 0 && <Text style={styles.rewardText}>+{odul.xp} 🌟 XP</Text>}
+               {odul.mutluluk > 0 && <Text style={styles.rewardText}>+{odul.mutluluk} 😊 Mutluluk</Text>}
+               {odul.mutluluk < 0 && <Text style={[styles.rewardText, { color: '#d63031' }]}>{odul.mutluluk} 🥺 Mutluluk</Text>}
+            </View>
+
+            <View style={styles.gameOverButtons}>
+               <TouchableOpacity style={[styles.goBtn, styles.goBtnAgain]} onPress={onTekrarOyna} activeOpacity={0.8}>
+                  <Text style={styles.goBtnText}>🔄 Tekrar Oyna</Text>
+               </TouchableOpacity>
+               <TouchableOpacity style={[styles.goBtn, styles.goBtnMenu]} onPress={onMenuyeDon} activeOpacity={0.8}>
+                  <Text style={styles.goBtnText}>🔙 Menüye Dön</Text>
+               </TouchableOpacity>
+            </View>
+         </View>
+      </View>
+   );
+};
+
+
 // --- OYUN 1: TAP TAP CATCHER ---
-const TapTapGame = ({ onOyunBitti }) => {
+const TapTapGame = ({ onMenuCikisi, oyunSessizOdulVer }) => {
   const [oyunAktif, setOyunAktif] = useState(false);
+  const [oyunBitti, setOyunBitti] = useState(false);
+  const [kazanilanOdul, setKazanilanOdul] = useState({ altin: 0, xp: 0, mutluluk: 0 });
   const [puan, setPuan] = useState(0);
   const [kalanSure, setKalanSure] = useState(10);
   const [hedefPos, setHedefPos] = useState({ top: '50%', left: '50%' });
@@ -17,7 +48,15 @@ const TapTapGame = ({ onOyunBitti }) => {
       timer = setInterval(() => setKalanSure((prev) => prev - 1), 1000);
     } else if (kalanSure === 0 && oyunAktif) {
       setOyunAktif(false);
-      onOyunBitti(puan); // Skoru context'e gönder
+      
+      let kMutluluk = puan;
+      let kXp = puan * 2;
+      let kAltin = Math.max(5, puan);
+      if (puan === 0) {
+         kMutluluk = -10; kXp = 0; kAltin = 0;
+      }
+      setKazanilanOdul({ mutluluk: kMutluluk, xp: kXp, altin: kAltin });
+      setOyunBitti(true);
     }
     return () => clearInterval(timer);
   }, [oyunAktif, kalanSure]);
@@ -25,8 +64,19 @@ const TapTapGame = ({ onOyunBitti }) => {
   const oyunaBasla = () => {
     setPuan(0);
     setKalanSure(10);
+    setOyunBitti(false);
     setOyunAktif(true);
     hedefYerDegistir();
+  };
+
+  const handleTekrarOyna = () => {
+    oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+    oyunaBasla();
+  };
+
+  const handleMenuyeDon = () => {
+    oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+    onMenuCikisi();
   };
 
   const hedefYerDegistir = () => {
@@ -46,7 +96,9 @@ const TapTapGame = ({ onOyunBitti }) => {
 
   return (
     <View style={styles.gameContainer}>
-      {!oyunAktif ? (
+      {oyunBitti ? (
+         <GameOverOverlay odul={kazanilanOdul} onTekrarOyna={handleTekrarOyna} onMenuyeDon={handleMenuyeDon} />
+      ) : !oyunAktif ? (
         <View style={styles.startContainer}>
           <Text style={styles.title}>Tap-Tap Catcher 🎮</Text>
           <Text style={styles.desc}>10 saniye boyunca ekranda beliren hedefi olabildiğince hızlı yakala!</Text>
@@ -71,18 +123,19 @@ const TapTapGame = ({ onOyunBitti }) => {
 
 // --- OYUN 2: HAFIZA KARTLARI (Memory Match) ---
 const EMOJILER = ['🍎', '🦴', '🧶', '⚽'];
-const MAKS_KART = 8; // 4 çift
+const MAKS_KART = 8; 
 
-const HafizaOyunu = ({ onHafizaKartiBitti }) => {
+const HafizaOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
    const [kartlar, setKartlar] = useState([]);
    const [secilenler, setSecilenler] = useState([]);
    const [eslesenler, setEslesenler] = useState([]);
    const [oyunAktif, setOyunAktif] = useState(false);
+   const [oyunBitti, setOyunBitti] = useState(false);
+   const [kazanilanOdul, setKazanilanOdul] = useState({ altin: 0, xp: 0, mutluluk: 0 });
    const [hamle, setHamle] = useState(0);
 
    const oyunaBasla = () => {
       const ciftler = [...EMOJILER, ...EMOJILER];
-      // Fisher-Yates shuffle
       for (let i = ciftler.length - 1; i > 0; i--) {
          const j = Math.floor(Math.random() * (i + 1));
          [ciftler[i], ciftler[j]] = [ciftler[j], ciftler[i]];
@@ -91,6 +144,7 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
       setSecilenler([]);
       setEslesenler([]);
       setHamle(0);
+      setOyunBitti(false);
       setOyunAktif(true);
    };
 
@@ -109,27 +163,33 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
      }
    }, [secilenler]);
 
-   const oyundanCik = () => {
-      setKartlar([]);
-      setSecilenler([]);
-      setEslesenler([]);
-      const sonHamle = Number(hamle) || 0;
-      setHamle(0);
-      onHafizaKartiBitti(sonHamle); 
-   };
-
    useEffect(() => {
       if (oyunAktif && eslesenler.length === MAKS_KART) {
          setOyunAktif(false);
+         // Yarım saniye bekleyip sonucu göster
          setTimeout(() => {
-            Alert.alert(
-              "Tebrikler! 🎉", 
-              "Tüm kartları eşleştirdin! Ödüller hesabına eklendi.", 
-              [{ text: "Harika", onPress: () => oyundanCik() }]
-            );
+            const gercekHamle = Number(hamle) || 10;
+            const kazanilanPuan = gercekHamle <= 12 ? 15 : 10; 
+            
+            setKazanilanOdul({
+                mutluluk: kazanilanPuan,
+                xp: kazanilanPuan * 2,
+                altin: Math.max(5, kazanilanPuan)
+            });
+            setOyunBitti(true);
          }, 500);
       }
    }, [eslesenler, oyunAktif]);
+
+   const handleTekrarOyna = () => {
+    oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+    oyunaBasla();
+   };
+
+   const handleMenuyeDon = () => {
+    oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+    onMenuCikisi();
+   };
 
    const kartSec = (index) => {
       if (secilenler.length < 2 && !secilenler.includes(index) && !eslesenler.includes(index)) {
@@ -139,7 +199,9 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
 
    return (
     <View style={styles.gameContainer}>
-       {!oyunAktif ? (
+       {oyunBitti ? (
+          <GameOverOverlay odul={kazanilanOdul} onTekrarOyna={handleTekrarOyna} onMenuyeDon={handleMenuyeDon} />
+       ) : !oyunAktif ? (
          <View style={styles.startContainer}>
            <Text style={styles.title}>Hafıza Kartları 🃏</Text>
            <Text style={styles.desc}>Aynı olan çiftleri bul! En az hamleyle bitirmeye çalış.</Text>
@@ -148,11 +210,7 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
            </TouchableOpacity>
          </View>
        ) : (
-         <ScrollView 
-            style={styles.memoryArea} 
-            contentContainerStyle={{ paddingBottom: 150, paddingTop: 50, alignItems: 'center' }} 
-            showsVerticalScrollIndicator={false}
-         >
+         <ScrollView style={styles.memoryArea} contentContainerStyle={{ paddingBottom: 150, paddingTop: 50, alignItems: 'center' }} showsVerticalScrollIndicator={false}>
              <Text style={styles.hamleText}>Yapılan Hamle: {hamle}</Text>
              <View style={styles.gridContainer}>
                 {kartlar && kartlar.length > 0 && kartlar.map((kart, index) => {
@@ -176,8 +234,10 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
 };
 
 // --- OYUN 3: HIZLI MATEMATİK ---
-const MatematikOyunu = ({ onMatematikBitti }) => {
+const MatematikOyunu = ({ onMenuCikisi, oyunSessizOdulVer }) => {
    const [oyunAktif, setOyunAktif] = useState(false);
+   const [oyunBitti, setOyunBitti] = useState(false);
+   const [kazanilanOdul, setKazanilanOdul] = useState({ altin: 0, xp: 0, mutluluk: 0 });
    const [kalanSure, setKalanSure] = useState(15);
    const [skor, setSkor] = useState(0);
    const [soru, setSoru] = useState({ metin: '', cevap: 0, siklar: [] });
@@ -188,7 +248,15 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
         timer = setInterval(() => setKalanSure(prev => prev - 1), 1000);
       } else if (kalanSure <= 0 && oyunAktif) {
         setOyunAktif(false);
-        onMatematikBitti(skor);
+        const calcSkor = skor * 4;
+        let kMutluluk = calcSkor;
+        let kXp = calcSkor * 2;
+        let kAltin = Math.max(5, calcSkor);
+        if (skor === 0) {
+           kMutluluk = -10; kXp = 0; kAltin = 0;
+        }
+        setKazanilanOdul({ mutluluk: kMutluluk, xp: kXp, altin: kAltin });
+        setOyunBitti(true);
       }
       return () => clearInterval(timer);
    }, [oyunAktif, kalanSure]);
@@ -199,20 +267,15 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
       const isAddition = Math.random() > 0.5;
       const sayi1 = sayiUret(1, 20);
       const sayi2 = sayiUret(1, 20);
-      let dogruCevap = 0;
-      let soruMetni = '';
+      let dogruCevap = 0; let soruMetni = '';
 
       if (isAddition) {
-         soruMetni = `${sayi1} + ${sayi2} = ?`;
-         dogruCevap = sayi1 + sayi2;
+         soruMetni = `${sayi1} + ${sayi2} = ?`; dogruCevap = sayi1 + sayi2;
       } else {
-         const buyuk = Math.max(sayi1, sayi2);
-         const kucuk = Math.min(sayi1, sayi2);
-         soruMetni = `${buyuk} - ${kucuk} = ?`;
-         dogruCevap = buyuk - kucuk;
+         const buyuk = Math.max(sayi1, sayi2); const kucuk = Math.min(sayi1, sayi2);
+         soruMetni = `${buyuk} - ${kucuk} = ?`; dogruCevap = buyuk - kucuk;
       }
 
-      // 3 Şık Üret: 1 Doğru, 2 Yanlış
       let yanlis1 = dogruCevap + sayiUret(1, 4) * (Math.random() > 0.5 ? 1 : -1);
       let yanlis2 = dogruCevap + sayiUret(1, 5) * (Math.random() > 0.5 ? 1 : -1);
       if(yanlis1 === dogruCevap) yanlis1 += 1;
@@ -225,6 +288,7 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
    const oyunaBasla = () => {
       setSkor(0);
       setKalanSure(15);
+      setOyunBitti(false);
       setOyunAktif(true);
       soruOlustur();
    };
@@ -234,14 +298,25 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
          setSkor(prev => prev + 1);
          soruOlustur();
       } else {
-         // Yanlış cevapta 2sn ceza
          setKalanSure(prev => Math.max(0, prev - 2)); 
       }
    };
 
+   const handleTekrarOyna = () => {
+      oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+      oyunaBasla();
+   };
+  
+   const handleMenuyeDon = () => {
+      oyunSessizOdulVer(kazanilanOdul.mutluluk, kazanilanOdul.xp, kazanilanOdul.altin);
+      onMenuCikisi();
+   };
+
    return (
       <View style={styles.gameContainer}>
-         {!oyunAktif ? (
+         {oyunBitti ? (
+            <GameOverOverlay odul={kazanilanOdul} onTekrarOyna={handleTekrarOyna} onMenuyeDon={handleMenuyeDon} />
+         ) : !oyunAktif ? (
            <View style={styles.startContainer}>
              <Text style={styles.title}>Hızlı Matematik 🧠</Text>
              <Text style={styles.desc}>15 saniye içinde en fazla doğru veya eksi işlemini çöz. (Yanlış cevap süreni 2sn kısaltır!)</Text>
@@ -255,19 +330,12 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
                  <Text style={styles.scoreText}>Doğru: {skor}</Text>
                  <Text style={[styles.timeText, kalanSure <= 5 && {color: 'red'}]}>Süre: {kalanSure}s</Text>
               </View>
-
               <View style={styles.soruKutusu}>
                  <Text style={styles.soruText}>{soru.metin}</Text>
               </View>
-
               <View style={styles.siklarContainer}>
                  {soru.siklar.map((secim, idx) => (
-                    <TouchableOpacity 
-                      key={idx} 
-                      style={styles.sikBtn} 
-                      onPress={() => cevapKontrol(secim)} 
-                      activeOpacity={0.7}
-                    >
+                    <TouchableOpacity key={idx} style={styles.sikBtn} onPress={() => cevapKontrol(secim)} activeOpacity={0.7}>
                        <Text style={styles.sikText}>{secim}</Text>
                     </TouchableOpacity>
                  ))}
@@ -281,39 +349,18 @@ const MatematikOyunu = ({ onMatematikBitti }) => {
 
 // --- ANA OYUN SEÇİM & RENDER EKRANI ---
 const GameScreen = () => {
-  const { isLoaded, oyunOynaPuan, altinKazanAciktan } = useContext(TamagotchiContext);
-  const [secilenOyun, setSecilenOyun] = useState(null); // 'tap', 'memory', 'math' veya null
+  const { isLoaded, oyunSessizOdulVer } = useContext(TamagotchiContext);
+  const [secilenOyun, setSecilenOyun] = useState(null); 
 
   if (!isLoaded) return null;
 
-  // 1) TapTap Sonucu (Global)
-  const handleTapTapBitti = (puan) => {
+  const handleMenuDonus = () => {
      setSecilenOyun(null);
-     oyunOynaPuan(puan); // Mevcut fonksiyon (Orantılı Altın/Mutluluk/XP)
   };
 
-  // 2) Memory Sonucu (Özel Ödül)
-  const handleMemoryBitti = (hamle) => {
-     setSecilenOyun(null);
-     
-     const gercekHamle = Number(hamle) || 10;
-     const kazanilanPuan = gercekHamle <= 12 ? 15 : 10; // Az hamle = çok puan
-
-     oyunOynaPuan(kazanilanPuan); 
-  };
-
-  // 3) Math Sonucu 
-  const handleMathBitti = (skor) => {
-     setSecilenOyun(null);
-     // Her doğru cvp = 5 altın, 10 xp. Mevcut oyunOynaPuan parametresi Mutluluk=skor, xp=skor*2 vb hesaplıyor.
-     // Dolayısıyla skor * 5 göndererek mevcut çarpanı tatmin edici şekilde kullanıyoruz.
-     oyunOynaPuan(skor * 4);
-  };
-
-
-  if (secilenOyun === 'tap') return <TapTapGame onOyunBitti={handleTapTapBitti} />;
-  if (secilenOyun === 'memory') return <HafizaOyunu onHafizaKartiBitti={handleMemoryBitti} />;
-  if (secilenOyun === 'math') return <MatematikOyunu onMatematikBitti={handleMathBitti} />;
+  if (secilenOyun === 'tap') return <TapTapGame onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
+  if (secilenOyun === 'memory') return <HafizaOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
+  if (secilenOyun === 'math') return <MatematikOyunu onMenuCikisi={handleMenuDonus} oyunSessizOdulVer={oyunSessizOdulVer} />;
 
   return (
     <ScrollView style={styles.menuContainer} contentContainerStyle={{paddingBottom:40}} showsVerticalScrollIndicator={false}>
@@ -348,205 +395,80 @@ const GameScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  menuContainer: {
-     flex: 1,
-     backgroundColor: '#f1f2f6',
-     padding: 20,
-     paddingTop: 40,
-  },
-  menuTitle: {
-     fontSize: 30,
-     fontWeight: '900',
-     color: '#2d3436',
-     marginBottom: 10,
-  },
-  menuSub: {
-     fontSize: 15,
-     color: '#636e72',
-     marginBottom: 30,
-     lineHeight: 22,
-  },
+  menuContainer: { flex: 1, backgroundColor: '#f1f2f6', padding: 20, paddingTop: 40 },
+  menuTitle: { fontSize: 30, fontWeight: '900', color: '#2d3436', marginBottom: 10 },
+  menuSub: { fontSize: 15, color: '#636e72', marginBottom: 30, lineHeight: 22 },
   oyunCard: {
-     flexDirection: 'row',
-     backgroundColor: '#ffffff',
-     padding: 20,
-     borderRadius: 24,
-     marginBottom: 20,
-     alignItems: 'center',
-     shadowColor: '#000',
-     shadowOffset: { width: 0, height: 6 },
-     shadowOpacity: 0.08,
-     shadowRadius: 10,
-     elevation: 5,
+     flexDirection: 'row', backgroundColor: '#ffffff', padding: 20, borderRadius: 24,
+     marginBottom: 20, alignItems: 'center', shadowColor: '#000',
+     shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.08, shadowRadius: 10, elevation: 5,
   },
-  cardEmoji: {
-     fontSize: 50,
-     marginRight: 20,
-  },
-  cardInfo: {
-     flex: 1,
-  },
-  cardTitle: {
-     fontSize: 18,
-     fontWeight: '800',
-     color: '#0984e3',
-     marginBottom: 6,
-  },
-  cardDesc: {
-     fontSize: 13,
-     color: '#636e72',
-     lineHeight: 18,
-  },
+  cardEmoji: { fontSize: 50, marginRight: 20 },
+  cardInfo: { flex: 1 },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: '#0984e3', marginBottom: 6 },
+  cardDesc: { fontSize: 13, color: '#636e72', lineHeight: 18 },
+  
   // ORTAK OYUN STİLLERİ
-  gameContainer: {
-    flex: 1,
-    backgroundColor: '#f1f2f6',
-  },
-  startContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 30,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '900',
-    color: '#2d3436',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  desc: {
-    fontSize: 16,
-    color: '#636e72',
-    textAlign: 'center',
-    marginBottom: 40,
-    lineHeight: 24,
-  },
-  startButton: {
-    backgroundColor: '#10ac84',
-    paddingVertical: 18,
-    paddingHorizontal: 50,
-    borderRadius: 20,
-    elevation: 8,
-  },
-  startButtonText: {
-    color: '#ffffff',
-    fontSize: 20,
-    fontWeight: '900',
-  },
-  gameArea: {
-    flex: 1,
-    backgroundColor: '#dfe6e9',
-    position: 'relative',
-  },
+  gameContainer: { flex: 1, backgroundColor: '#f1f2f6' },
+  startContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 30 },
+  title: { fontSize: 32, fontWeight: '900', color: '#2d3436', marginBottom: 16, textAlign: 'center' },
+  desc: { fontSize: 16, color: '#636e72', textAlign: 'center', marginBottom: 40, lineHeight: 24 },
+  startButton: { backgroundColor: '#10ac84', paddingVertical: 18, paddingHorizontal: 50, borderRadius: 20, elevation: 8 },
+  startButtonText: { color: '#ffffff', fontSize: 20, fontWeight: '900' },
+  gameArea: { flex: 1, backgroundColor: '#dfe6e9', position: 'relative' },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 24,
-    paddingTop: 40,
-    backgroundColor: '#f1f2f6',
-    elevation: 5,
-    zIndex: 10,
+    flexDirection: 'row', justifyContent: 'space-between', padding: 24, paddingTop: 40,
+    backgroundColor: '#f1f2f6', elevation: 5, zIndex: 10,
   },
-  scoreText: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#0984e3',
-  },
-  timeText: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#d63031',
-  },
+  scoreText: { fontSize: 24, fontWeight: '900', color: '#0984e3' },
+  timeText: { fontSize: 24, fontWeight: '900', color: '#d63031' },
   target: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    backgroundColor: '#ffffff',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 5,
+    position: 'absolute', width: 60, height: 60, backgroundColor: '#ffffff', borderRadius: 30,
+    justifyContent: 'center', alignItems: 'center', elevation: 5,
   },
-  targetEmoji: {
-    fontSize: 34,
-  },
+  targetEmoji: { fontSize: 34 },
 
   // MEMORY OYUNU
-  memoryArea: {
-     flex: 1,
-     backgroundColor: '#dfe6e9',
-     // alignItems ve paddingTop ScrollView contentContainerStyle içine taşındı
-  },
-  hamleText: {
-     fontSize: 20,
-     fontWeight: '800',
-     color: '#2c3e50',
-     marginBottom: 30,
-  },
-  gridContainer: {
-     flexDirection: 'row',
-     flexWrap: 'wrap',
-     justifyContent: 'center',
-     gap: 15,
-     paddingHorizontal: 20,
-  },
-  memoryCard: {
-     width: 75,
-     height: 90,
-     borderRadius: 16,
-     alignItems: 'center',
-     justifyContent: 'center',
-     elevation: 4,
-  },
-  memoryCardKapali: {
-     backgroundColor: '#0984e3',
-  },
-  memoryCardAcik: {
-     backgroundColor: '#ffffff',
-  },
-  memoryEmoji: {
-     fontSize: 30,
-  },
+  memoryArea: { flex: 1, backgroundColor: '#dfe6e9' },
+  hamleText: { fontSize: 20, fontWeight: '800', color: '#2c3e50', marginBottom: 30 },
+  gridContainer: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 15, paddingHorizontal: 20 },
+  memoryCard: { width: 75, height: 90, borderRadius: 16, alignItems: 'center', justifyContent: 'center', elevation: 4 },
+  memoryCardKapali: { backgroundColor: '#0984e3' },
+  memoryCardAcik: { backgroundColor: '#ffffff' },
+  memoryEmoji: { fontSize: 30 },
 
   // MATH OYUNU
-  mathArea: {
-     flex: 1,
-     backgroundColor: '#2c3e50',
+  mathArea: { flex: 1, backgroundColor: '#2c3e50' },
+  mathHeader: { flexDirection: 'row', justifyContent: 'space-between', padding: 24, paddingTop: 40, backgroundColor: 'transparent' },
+  soruKutusu: { marginTop: 60, alignItems: 'center', justifyContent: 'center' },
+  soruText: { fontSize: 50, fontWeight: '900', color: '#ffffff' },
+  siklarContainer: { marginTop: 80, paddingHorizontal: 20, gap: 20 },
+  sikBtn: { backgroundColor: '#1abc9c', paddingVertical: 20, borderRadius: 16, alignItems: 'center' },
+  sikText: { fontSize: 26, fontWeight: '800', color: '#ffffff' },
+
+  // GAME OVER OVERLAY
+  gameOverOverlay: {
+     flex: 1, backgroundColor: 'rgba(0,0,0,0.6)',
+     justifyContent: 'center', alignItems: 'center', padding: 20
   },
-  mathHeader: {
-     flexDirection: 'row',
-     justifyContent: 'space-between',
-     padding: 24,
-     paddingTop: 40,
-     backgroundColor: 'transparent',
+  gameOverCard: {
+     width: '100%', maxWidth: 350, backgroundColor: '#ffffff',
+     borderRadius: 30, padding: 30, alignItems: 'center',
+     shadowColor: '#000', shadowOffset: { width: 0, height: 10 },
+     shadowOpacity: 0.2, shadowRadius: 20, elevation: 15
   },
-  soruKutusu: {
-     marginTop: 60,
-     alignItems: 'center',
-     justifyContent: 'center',
+  gameOverEmoji: { fontSize: 60, marginBottom: 10 },
+  gameOverTitle: { fontSize: 28, fontWeight: '900', color: '#2d3436', marginBottom: 20 },
+  rewardsContainer: {
+     backgroundColor: '#f1f2f6', width: '100%', borderRadius: 20,
+     padding: 20, alignItems: 'center', marginBottom: 30
   },
-  soruText: {
-     fontSize: 50,
-     fontWeight: '900',
-     color: '#ffffff',
-  },
-  siklarContainer: {
-     marginTop: 80,
-     paddingHorizontal: 20,
-     gap: 20,
-  },
-  sikBtn: {
-     backgroundColor: '#1abc9c',
-     paddingVertical: 20,
-     borderRadius: 16,
-     alignItems: 'center',
-  },
-  sikText: {
-     fontSize: 26,
-     fontWeight: '800',
-     color: '#ffffff',
-  }
+  rewardText: { fontSize: 18, fontWeight: '800', color: '#0984e3', marginVertical: 4 },
+  gameOverButtons: { width: '100%', gap: 12 },
+  goBtn: { width: '100%', paddingVertical: 18, borderRadius: 16, alignItems: 'center' },
+  goBtnAgain: { backgroundColor: '#10ac84' },
+  goBtnMenu: { backgroundColor: '#d63031' },
+  goBtnText: { color: '#ffffff', fontSize: 18, fontWeight: '900' }
 });
 
 export default GameScreen;

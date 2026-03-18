@@ -279,6 +279,26 @@ export const TamagotchiProvider = ({ children }) => {
     }
   };
 
+  const oyunSessizOdulVer = (kMutluluk, kXp, kAltin) => {
+    setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
+    setMutluluk(prev => Math.min(100, Math.max(0, prev + kMutluluk)));
+    if (kAltin > 0) setAltin(prev => prev + kAltin);
+    
+    if (kXp > 0) {
+      setXp(prev => {
+        let yeniToplam = prev + kXp;
+        if (yeniToplam >= 100) {
+           setLevel(pLevel => pLevel + Math.floor(yeniToplam / 100));
+           Vibration.vibrate([0, 100, 50, 100]);
+           return yeniToplam % 100;
+        }
+        return yeniToplam;
+      });
+    }
+    Vibration.vibrate(kMutluluk > 0 ? [0, 50, 50, 50] : 300);
+    setAnimTetikle(prev => prev + 1);
+  };
+
   const oyunOynaPuan = (puan) => {
     setIstatistikler(prev => ({ ...prev, oynamaSayisi: prev.oynamaSayisi + 1 }));
     if(puan > 0) {
@@ -343,7 +363,7 @@ export const TamagotchiProvider = ({ children }) => {
   return (
     <TamagotchiContext.Provider value={{ 
       ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
-      esyaSatinAl, esyaKullan, oyunOynaPuan, isLoaded, tamamlaOdak, bozOdak, animTetikle
+      esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}
     </TamagotchiContext.Provider>

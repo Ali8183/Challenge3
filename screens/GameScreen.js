@@ -136,16 +136,16 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
        ) : (
          <ScrollView 
             style={styles.memoryArea} 
-            contentContainerStyle={{ paddingBottom: 150, alignItems: 'center' }} 
+            contentContainerStyle={{ paddingBottom: 150, paddingTop: 50, alignItems: 'center' }} 
             showsVerticalScrollIndicator={false}
          >
              <Text style={styles.hamleText}>Yapılan Hamle: {hamle}</Text>
              <View style={styles.gridContainer}>
-                {kartlar.map((kart, index) => {
+                {kartlar && kartlar.length > 0 && kartlar.map((kart, index) => {
                    const acikMi = secilenler.includes(index) || eslesenler.includes(index);
                    return (
                       <TouchableOpacity 
-                         key={kart.id} 
+                         key={kart?.id ?? index} 
                          style={[styles.memoryCard, acikMi ? styles.memoryCardAcik : styles.memoryCardKapali]}
                          onPress={() => kartSec(index)}
                          activeOpacity={0.8}
@@ -466,8 +466,7 @@ const styles = StyleSheet.create({
   memoryArea: {
      flex: 1,
      backgroundColor: '#dfe6e9',
-     alignItems: 'center',
-     paddingTop: 50,
+     // alignItems ve paddingTop ScrollView contentContainerStyle içine taşındı
   },
   hamleText: {
      fontSize: 20,

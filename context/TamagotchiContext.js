@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Alert, Vibration } from 'react-native';
+import { Alert, Vibration, View, Text } from 'react-native';
 
 export const TamagotchiContext = createContext();
 
@@ -87,9 +87,16 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
         if (storedHastami) setHastami(storedHastami === 'true');
-        if (storedEnerji) {
-           const num = parseInt(storedEnerji);
-           setEnerji(isNaN(num) ? 100 : num);
+        
+        try {
+           if (storedEnerji) {
+              const num = parseInt(storedEnerji);
+              setEnerji(isNaN(num) ? 100 : num);
+           } else {
+              setEnerji(100);
+           }
+        } catch {
+           setEnerji(100);
         }
         
         if (storedEnvanter) {
@@ -403,7 +410,11 @@ export const TamagotchiProvider = ({ children }) => {
       enerji, uyuyorMu, setUyuyorMu,
       esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isLoaded, tamamlaOdak, bozOdak, animTetikle
     }}>
-      {children}
+      {!isLoaded ? (
+         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ fontSize: 18, color: '#2d3436' }}>Yükleniyor...</Text>
+         </View>
+      ) : children}
     </TamagotchiContext.Provider>
   );
 };

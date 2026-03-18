@@ -134,7 +134,11 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
            </TouchableOpacity>
          </View>
        ) : (
-         <View style={styles.memoryArea}>
+         <ScrollView 
+            style={styles.memoryArea} 
+            contentContainerStyle={{ paddingBottom: 150, alignItems: 'center' }} 
+            showsVerticalScrollIndicator={false}
+         >
              <Text style={styles.hamleText}>Yapılan Hamle: {hamle}</Text>
              <View style={styles.gridContainer}>
                 {kartlar.map((kart, index) => {
@@ -151,7 +155,7 @@ const HafizaOyunu = ({ onHafizaKartiBitti }) => {
                    );
                 })}
              </View>
-         </View>
+         </ScrollView>
        )}
     </View>
    );
@@ -479,8 +483,8 @@ const styles = StyleSheet.create({
      paddingHorizontal: 20,
   },
   memoryCard: {
-     width: (windowWidth - 70) / 4,
-     height: (windowWidth - 70) / 4,
+     width: 75,
+     height: 90,
      borderRadius: 16,
      alignItems: 'center',
      justifyContent: 'center',

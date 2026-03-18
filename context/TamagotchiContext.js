@@ -47,7 +47,7 @@ export const TamagotchiProvider = ({ children }) => {
   const defaultIstatistikler = { beslenmeSayisi: 0, odakTamamlanmaSayisi: 0, oynamaSayisi: 0 };
   const [istatistikler, setIstatistikler] = useState(defaultIstatistikler);
 
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [animTetikle, setAnimTetikle] = useState(0); 
 
   const [oncekiLevel, setOncekiLevel] = useState(1);
@@ -114,10 +114,10 @@ export const TamagotchiProvider = ({ children }) => {
            setIstatistikler({ ...defaultIstatistikler, ...JSON.parse(storedStats) });
         }
 
-        setIsLoaded(true);
+        setIsReady(true);
       } catch (e) {
         console.error("Veri yüklenirken hata:", e);
-        setIsLoaded(true);
+        setIsReady(true);
       }
     };
     loadData();
@@ -142,11 +142,11 @@ export const TamagotchiProvider = ({ children }) => {
       }
     };
     saveData();
-  }, [aclik, mutluluk, level, xp, rozetler, altin, hastami, enerji, envanter, istatistikler, isLoaded]);
+  }, [aclik, mutluluk, level, xp, rozetler, altin, hastami, enerji, envanter, istatistikler, isReady]);
 
   // Evrim Animasyonu / Kutlama
   useEffect(() => {
-    if (isLoaded && level > oncekiLevel) {
+    if (isReady && level > oncekiLevel) {
        if (oncekiLevel < 5 && level >= 5) {
            setTimeout(() => Alert.alert("EVRİM GEÇİRDİ! 🌟", "Tebrikler, evcil hayvanın büyüdü ve bir Yavru (🐣) oldu!"), 500);
            Vibration.vibrate([0, 200, 100, 400]);
@@ -156,15 +156,15 @@ export const TamagotchiProvider = ({ children }) => {
        }
        setOncekiLevel(level);
     }
-  }, [level, isLoaded, oncekiLevel]);
+  }, [level, isReady, oncekiLevel]);
 
   useEffect(() => {
-    if (isLoaded && enerji >= 100 && uyuyorMu) {
+    if (isReady && enerji >= 100 && uyuyorMu) {
        setUyuyorMu(false);
        Vibration.vibrate([0, 200, 100, 200]);
        Alert.alert('Günaydın! ☀️', 'Evcil hayvanın tamamen dinlendi ve uyandı!');
     }
-  }, [enerji, uyuyorMu, isLoaded]);
+  }, [enerji, uyuyorMu, isReady]);
 
   const uykuRef = useRef(false);
   useEffect(() => {
@@ -172,7 +172,7 @@ export const TamagotchiProvider = ({ children }) => {
   }, [uyuyorMu]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isReady) return;
 
     const interval = setInterval(() => {
       // Uyurken hızlı enerji topla, geri kalanını durdur
@@ -213,10 +213,10 @@ export const TamagotchiProvider = ({ children }) => {
     }, 5000); 
 
     return () => clearInterval(interval);
-  }, [isLoaded]);
+  }, [isReady]);
 
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isReady) return;
     
     let yeniRozetler = [...rozetler];
     let kazanilanXp = 0;
@@ -269,7 +269,7 @@ export const TamagotchiProvider = ({ children }) => {
       Vibration.vibrate([0, 150, 150, 150, 150, 150]);
       setTimeout(() => Alert.alert("BAŞARIM AÇILDI! 🌟", yeniKazanilanlar.join("\n\n")), 500);
     }
-  }, [istatistikler, altin, level, mutluluk, rozetler, isLoaded]);
+  }, [istatistikler, altin, level, mutluluk, rozetler, isReady]);
 
   const esyaSatinAl = (itemId) => {
     const item = MARKET_ITEMS[itemId];
@@ -404,10 +404,10 @@ export const TamagotchiProvider = ({ children }) => {
     );
   };
 
-  if (!isLoaded) {
+  if (!isReady) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f1f2f6' }}>
-        <Text style={{ fontSize: 18, color: '#2d3436' }}>Yükleniyor...</Text>
+        <Text style={{ fontSize: 18, color: '#2d3436', fontWeight: 'bold' }}>Oyun Yükleniyor...</Text>
       </View>
     );
   }
@@ -416,7 +416,7 @@ export const TamagotchiProvider = ({ children }) => {
     <TamagotchiContext.Provider value={{ 
       ...evrim, aclik, mutluluk, level, xp, rozetler, altin, envanter, hastami,
       enerji, uyuyorMu, setUyuyorMu,
-      esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isLoaded, tamamlaOdak, bozOdak, animTetikle
+      esyaSatinAl, esyaKullan, oyunOynaPuan, oyunSessizOdulVer, isReady, isLoaded: isReady, tamamlaOdak, bozOdak, animTetikle
     }}>
       {children}
     </TamagotchiContext.Provider>

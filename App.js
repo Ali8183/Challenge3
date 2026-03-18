@@ -14,8 +14,8 @@ import BedroomScreen from './screens/BedroomScreen';
 const Tab = createBottomTabNavigator();
 
 const GlobalHeaderRight = () => {
-  const { altin, isLoaded } = useContext(TamagotchiContext);
-  if (!isLoaded) return null;
+  const { altin, isReady } = useContext(TamagotchiContext);
+  if (!isReady) return null;
   
   return (
     <View style={styles.headerCoinContainer}>
@@ -36,19 +36,19 @@ const NavigationLogic = () => {
             borderTopWidth: 0,
             elevation: 10,
             height: 60,
-            paddingBottom: 10,
+            paddingBottom: 10
           },
           headerStyle: {
             backgroundColor: '#ffffff',
-            elevation: 0, 
+            elevation: 0,
             borderBottomWidth: 1,
-            borderBottomColor: '#f1f2f6',
+            borderBottomColor: '#f1f2f6'
           },
           headerTitleStyle: {
             fontWeight: '800',
-            color: '#2d3436',
+            color: '#2d3436'
           },
-          headerRight: () => <GlobalHeaderRight />,
+          headerRight: () => <GlobalHeaderRight />
         }}
       >
         <Tab.Screen 
@@ -72,6 +72,7 @@ const NavigationLogic = () => {
           component={FocusScreen} 
           options={{
             tabBarIcon: () => <Text style={{ fontSize: 24 }}>🎯</Text>,
+            title: "Odak"
           }}
         />
         <Tab.Screen 
@@ -79,6 +80,7 @@ const NavigationLogic = () => {
           component={ShopScreen} 
           options={{
             tabBarIcon: () => <Text style={{ fontSize: 24 }}>🛒</Text>,
+            title: "Market"
           }}
         />
         <Tab.Screen 

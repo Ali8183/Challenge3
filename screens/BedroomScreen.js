@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
    },
    lambText: {
       fontSize: 18,
-      fontWeight: 'Bold',
+      fontWeight: 'bold',
    },
    lightText: {
       color: '#2d3436',

@@ -87,7 +87,10 @@ export const TamagotchiProvider = ({ children }) => {
         if (storedRozetler) setRozetler(JSON.parse(storedRozetler));
         if (storedAltin) setAltin(parseInt(storedAltin));
         if (storedHastami) setHastami(storedHastami === 'true');
-        if (storedEnerji) setEnerji(parseInt(storedEnerji));
+        if (storedEnerji) {
+           const num = parseInt(storedEnerji);
+           setEnerji(isNaN(num) ? 100 : num);
+        }
         
         if (storedEnvanter) {
           const parsed = JSON.parse(storedEnvanter);

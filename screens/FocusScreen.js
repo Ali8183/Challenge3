@@ -160,8 +160,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginBottom: 40,
     
-     height: 10 },
-    
     
     elevation: 10,
     borderWidth: 6,
@@ -186,8 +184,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     
-     height: 6 },
-    
     
     elevation: 5,
   },
@@ -203,8 +199,6 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
     alignItems: 'center',
-    
-     height: 6 },
     
     
     elevation: 5,

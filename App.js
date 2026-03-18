@@ -35,17 +35,12 @@ const NavigationLogic = () => {
             backgroundColor: '#ffffff',
             borderTopWidth: 0,
             elevation: 10,
-            
-             height: -2 },
-            
-            
             height: 60,
             paddingBottom: 10,
           },
           headerStyle: {
             backgroundColor: '#ffffff',
             elevation: 0, 
-             
             borderBottomWidth: 1,
             borderBottomColor: '#f1f2f6',
           },

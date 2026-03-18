@@ -93,8 +93,6 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     alignItems: 'center',
     
-     height: 4 },
-    
     
     elevation: 5,
   },
@@ -141,8 +139,6 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 12,
     alignItems: 'center',
-    
-     height: 2 },
     
     
     elevation: 2,

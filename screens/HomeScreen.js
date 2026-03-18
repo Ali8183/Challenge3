@@ -173,8 +173,6 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     
-     height: 10 },
-    
     
     elevation: 8,
   },
@@ -270,8 +268,6 @@ const styles = StyleSheet.create({
     borderRadius: 28, 
     alignItems: 'center',
     justifyContent: 'center',
-    
-     height: 4 },
     
     
     elevation: 5,
